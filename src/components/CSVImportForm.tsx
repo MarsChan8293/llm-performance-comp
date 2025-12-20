@@ -1,28 +1,27 @@
 import { useState, useRef } from 'react'
+import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
-import { ScrollArea } from '@/components/ui/s
-import { parseCSV, ParsedBenchmarkRow } fro
+import { Badge } from '@/components/ui/badge'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { BenchmarkConfig, Benchmark } from '@/lib/types'
 import { parseCSV, ParsedBenchmarkRow } from '@/lib/csv-parser'
+import { BenchmarkConfig, Benchmark } from '@/lib/types'
 import { UploadSimple, FileArrowDown, X, CheckCircle, WarningCircle } from '@phosphor-icons/react'
-    chipName: '',
 
-  const [testDate, setTestDate
+interface CSVImportFormProps {
   onSave: (benchmarks: Benchmark[]) => void
-  const fileInputRef =
+  onCancel: () => void
 }
 
 export function CSVImportForm({ onSave, onCancel }: CSVImportFormProps) {
   const [config, setConfig] = useState<Omit<BenchmarkConfig, 'testDate'>>({
     modelName: '',
-      try {
+    serverName: '',
     networkConfig: '',
-      } catch (er
+    chipName: '',
     framework: '',
     frameworkParams: '',
   })
@@ -30,100 +29,102 @@ export function CSVImportForm({ onSave, onCancel }: CSVImportFormProps) {
   const [parsedRows, setParsedRows] = useState<ParsedBenchmarkRow[]>([])
   const [fileName, setFileName] = useState<string>('')
   const [error, setError] = useState<string>('')
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setFileName(file.name)
+    setError('')
+    setParsedRows([])
+
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      try {
+        const text = event.target?.result as string
+        const rows = parseCSV(text)
+        setParsedRows(rows)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : '解析 CSV 文件时发生错误')
+        setParsedRows([])
+      }
+    }
+    reader.readAsText(file)
   }
 
-
-      toast.error('请先上传并解析 CSV 文件')
-    }
-
-      config: {
-        testDate
-      metrics: row.me
-
-    onSave(benchmarks)
-
-    parsedR
-    config.serverName && 
-    config.chipName && 
-    testDate
-  return (
-      <div className="space-y-4">
-          <p className="te
-          </p>
-       
-     
-    reader.readAsText(file)
-   
-
-                <Card className="p
-                   
+  const handleRemoveFile = () => {
+    setFileName('')
     setParsedRows([])
     setError('')
-                    </div>
-                </Card>
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
     }
-   
+  }
 
-                      <p className="text-sm font
-                      
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
 
-                              已解析 
-                          </>
-            
-     
+    if (parsedRows.length === 0) {
+      return
+    }
 
-                    </div>
-                  <Button
+    const benchmarks: Benchmark[] = parsedRows.map((row) => ({
+      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       config: {
-                  
-                 
-        
-              </Card>
-
+        ...config,
+        testDate,
+      },
+      metrics: row.metrics,
+      createdAt: new Date().toISOString(),
     }))
 
     onSave(benchmarks)
-   
+  }
 
-        <>
-          
-    config.modelName && 
-              以下配置将应用于所有 
-    config.networkConfig && 
-              <div clas
-    config.framework && 
-            
+  const isFormValid =
+    parsedRows.length > 0 &&
+    config.modelName &&
+    config.serverName &&
+    config.networkConfig &&
+    config.chipName &&
+    config.framework &&
+    testDate
 
-          
-              <div className="space-y-2">
-                <Input
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="space-y-4">
         <div>
-                  onChange={(e) => setConfig({ ...config, se
-                />
+          <Label htmlFor="csv-upload">上传 CSV 文件 *</Label>
+          <p className="text-sm text-muted-foreground mb-3">
+            请上传包含性能数据的 CSV 文件（格式：Process Num, Input Length, Output Length, TTFT (ms), TPS (with prefill), Total Time (ms)）
           </p>
-                <Input
-                  
-                  onChange={(e) 
-                />
-              <div classNam
-                <Input
-                  required
-                  onChange={(
-            />
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            id="csv-upload"
+            accept=".csv"
+            onChange={handleFileChange}
+            className="hidden"
+          />
+
+          <div>
             {!fileName ? (
-                <Input
-                  required
-                  onChange={(e) => setConfig({ ...config, framework: e.target.va
-                />
-              <div classN
-                <Input
-                  type="date"
-                  value={testDate}
-                />
-            </div>
-              <Label htm
-                id="imp
-              </label>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full h-32 border-2 border-dashed hover:border-primary hover:bg-accent/50 transition-colors"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <div className="flex flex-col items-center gap-2">
+                  <UploadSimple size={32} className="text-muted-foreground" />
+                  <div className="text-center">
+                    <p className="font-medium">点击上传 CSV 文件</p>
+                    <p className="text-sm text-muted-foreground">支持 .csv 格式</p>
+                  </div>
+                </div>
+              </Button>
             ) : (
               <Card className="p-4">
                 <div className="flex items-center justify-between">
@@ -162,7 +163,7 @@ export function CSVImportForm({ onSave, onCancel }: CSVImportFormProps) {
             )}
 
             {error && (
-              <Alert variant="destructive">
+              <Alert variant="destructive" className="mt-3">
                 <WarningCircle size={18} className="mt-0.5" />
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
@@ -173,14 +174,16 @@ export function CSVImportForm({ onSave, onCancel }: CSVImportFormProps) {
 
       {parsedRows.length > 0 && (
         <>
-        <Button type="b
-          
-        <Button type="submit" disable
-            <h3 className="text-lg font-semibold">配置信息</h3>
-            <p className="text-sm text-muted-foreground">
-              以下配置将应用于所有 {parsedRows.length} 条导入的数据
-            </p>
-            
+          <Separator />
+
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-lg font-semibold">配置信息</h3>
+              <p className="text-sm text-muted-foreground">
+                以下配置将应用于所有 {parsedRows.length} 条导入的数据
+              </p>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="import-modelName">模型名称 *</Label>
@@ -246,13 +249,13 @@ export function CSVImportForm({ onSave, onCancel }: CSVImportFormProps) {
             <div className="space-y-2">
               <Label htmlFor="import-frameworkParams">框架启动参数</Label>
               <Input
-
+                id="import-frameworkParams"
                 value={config.frameworkParams}
                 onChange={(e) => setConfig({ ...config, frameworkParams: e.target.value })}
                 placeholder="例如：--max-batch-size=256 --gpu-memory-utilization=0.9"
-
+              />
             </div>
-
+          </div>
 
           <Separator />
 
@@ -260,54 +263,54 @@ export function CSVImportForm({ onSave, onCancel }: CSVImportFormProps) {
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold">数据预览</h3>
               <Badge variant="secondary">{parsedRows.length} 条记录</Badge>
+            </div>
 
-            
-
+            <ScrollArea className="h-64 border rounded-md">
               <div className="p-4 space-y-2">
-
+                {parsedRows.map((row, idx) => (
                   <Card key={idx} className="p-3">
-
+                    <div className="flex flex-wrap gap-4 text-sm">
                       <div>
                         <span className="text-muted-foreground">并发数：</span>
                         <span className="font-medium ml-1">{row.metrics.concurrency}</span>
-
+                      </div>
                       <div>
                         <span className="text-muted-foreground">输入/输出：</span>
                         <span className="font-medium ml-1">
                           {row.metrics.inputLength}/{row.metrics.outputLength}
                         </span>
-
+                      </div>
                       <div>
-
+                        <span className="text-muted-foreground">TTFT：</span>
                         <span className="font-medium ml-1">{row.metrics.ttft.toFixed(2)} ms</span>
-
+                      </div>
                       <div>
                         <span className="text-muted-foreground">吞吐量：</span>
                         <span className="font-medium ml-1">
                           {row.metrics.tokensPerSecond.toFixed(2)} tok/s
                         </span>
-
-
+                      </div>
+                      <div>
                         <span className="text-muted-foreground">TPOT：</span>
                         <span className="font-medium ml-1">{row.metrics.tpot.toFixed(4)} ms</span>
-
+                      </div>
                     </div>
-
+                  </Card>
                 ))}
-
+              </div>
             </ScrollArea>
-
+          </div>
         </>
-
+      )}
 
       <div className="flex gap-3 justify-end">
         <Button type="button" variant="outline" onClick={onCancel}>
-
-
+          取消
+        </Button>
         <Button type="submit" disabled={!isFormValid}>
           批量导入 {parsedRows.length > 0 && `(${parsedRows.length} 条)`}
         </Button>
       </div>
-
+    </form>
   )
-
+}
