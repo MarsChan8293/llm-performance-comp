@@ -6,10 +6,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { BenchmarkForm } from '@/components/BenchmarkForm'
+import { CSVImportForm } from '@/components/CSVImportForm'
 import { BenchmarkCard } from '@/components/BenchmarkCard'
 import { ComparisonPanel } from '@/components/ComparisonPanel'
 import { Benchmark, BenchmarkConfig, PerformanceMetrics } from '@/lib/types'
-import { Plus, MagnifyingGlass, ArrowsLeftRight, ChartBar } from '@phosphor-icons/react'
+import { Plus, MagnifyingGlass, ArrowsLeftRight, ChartBar, FileArrowDown } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [searchQuery, setSearchQuery] = useState('')
   const [isFormOpen, setIsFormOpen] = useState(false)
+  const [isCSVImportOpen, setIsCSVImportOpen] = useState(false)
   const [editingBenchmark, setEditingBenchmark] = useState<Benchmark | undefined>()
   const [activeTab, setActiveTab] = useState('list')
 
@@ -62,6 +64,12 @@ function App() {
     }
     setIsFormOpen(false)
     setEditingBenchmark(undefined)
+  }
+
+  const handleCSVImport = (importedBenchmarks: Benchmark[]) => {
+    setBenchmarks((current) => [...importedBenchmarks, ...(current || [])])
+    setIsCSVImportOpen(false)
+    toast.success(`成功导入 ${importedBenchmarks.length} 条基准测试数据`)
   }
 
   const handleDelete = (id: string) => {
@@ -142,9 +150,17 @@ function App() {
                   开始对比
                 </Button>
               )}
+              <Button 
+                onClick={() => setIsCSVImportOpen(true)} 
+                variant="outline" 
+                className="flex-1 md:flex-none"
+              >
+                <FileArrowDown size={18} weight="bold" className="mr-2" />
+                导入 CSV
+              </Button>
               <Button onClick={handleAddNew} className="flex-1 md:flex-none">
                 <Plus size={18} weight="bold" className="mr-2" />
-                添加基准测试
+                手动添加
               </Button>
             </div>
           </div>
@@ -172,13 +188,19 @@ function App() {
                 <p className="text-muted-foreground mb-4">
                   {searchQuery
                     ? '请尝试调整搜索关键词'
-                    : '添加您的第一个 LLM 性能基准测试数据'}
+                    : '通过导入 CSV 文件批量添加或手动添加单条测试数据'}
                 </p>
                 {!searchQuery && (
-                  <Button onClick={handleAddNew}>
-                    <Plus size={18} weight="bold" className="mr-2" />
-                    添加第一个基准测试
-                  </Button>
+                  <div className="flex gap-2 justify-center">
+                    <Button onClick={() => setIsCSVImportOpen(true)} variant="outline">
+                      <FileArrowDown size={18} weight="bold" className="mr-2" />
+                      导入 CSV
+                    </Button>
+                    <Button onClick={handleAddNew}>
+                      <Plus size={18} weight="bold" className="mr-2" />
+                      手动添加
+                    </Button>
+                  </div>
                 )}
               </div>
             ) : (
@@ -212,7 +234,7 @@ function App() {
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {editingBenchmark ? '编辑基准测试' : '添加基准测试'}
+              {editingBenchmark ? '编辑基准测试' : '手动添加基准测试'}
             </DialogTitle>
           </DialogHeader>
           <BenchmarkForm
@@ -222,6 +244,18 @@ function App() {
               setIsFormOpen(false)
               setEditingBenchmark(undefined)
             }}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isCSVImportOpen} onOpenChange={setIsCSVImportOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>批量导入基准测试（CSV）</DialogTitle>
+          </DialogHeader>
+          <CSVImportForm
+            onSave={handleCSVImport}
+            onCancel={() => setIsCSVImportOpen(false)}
           />
         </DialogContent>
       </Dialog>

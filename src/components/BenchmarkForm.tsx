@@ -26,8 +26,8 @@ export function BenchmarkForm({ benchmark, onSave, onCancel }: BenchmarkFormProp
 
   const [metrics, setMetrics] = useState<PerformanceMetrics>(
     benchmark?.metrics || {
-      inputLength: 0,
-      outputLength: 0,
+      inputLength: 128,
+      outputLength: 128,
       concurrency: 1,
       ttft: 0,
       tpot: 0,
@@ -52,7 +52,7 @@ export function BenchmarkForm({ benchmark, onSave, onCancel }: BenchmarkFormProp
               required
               value={config.modelName}
               onChange={(e) => setConfig({ ...config, modelName: e.target.value })}
-              placeholder="例如：GPT-4, Llama-2-70B"
+              placeholder="例如：Qwen3-32B-FP8"
             />
           </div>
           <div className="space-y-2">
@@ -72,7 +72,7 @@ export function BenchmarkForm({ benchmark, onSave, onCancel }: BenchmarkFormProp
               required
               value={config.networkConfig}
               onChange={(e) => setConfig({ ...config, networkConfig: e.target.value })}
-              placeholder="例如：8xA100-NVLink"
+              placeholder="例如：8xH100-NVLink"
             />
           </div>
           <div className="space-y-2">
@@ -123,6 +123,17 @@ export function BenchmarkForm({ benchmark, onSave, onCancel }: BenchmarkFormProp
         <h3 className="text-lg font-semibold">性能指标</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-2">
+            <Label htmlFor="concurrency">并发数（Process Num）*</Label>
+            <Input
+              id="concurrency"
+              type="number"
+              min="1"
+              required
+              value={metrics.concurrency}
+              onChange={(e) => setMetrics({ ...metrics, concurrency: Number(e.target.value) })}
+            />
+          </div>
+          <div className="space-y-2">
             <Label htmlFor="inputLength">输入长度（tokens）*</Label>
             <Input
               id="inputLength"
@@ -145,18 +156,7 @@ export function BenchmarkForm({ benchmark, onSave, onCancel }: BenchmarkFormProp
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="concurrency">并发数 *</Label>
-            <Input
-              id="concurrency"
-              type="number"
-              min="1"
-              required
-              value={metrics.concurrency}
-              onChange={(e) => setMetrics({ ...metrics, concurrency: Number(e.target.value) })}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="ttft">首 Token 延迟（ms）*</Label>
+            <Label htmlFor="ttft">首 Token 延迟 TTFT (ms)*</Label>
             <Input
               id="ttft"
               type="number"
@@ -168,7 +168,7 @@ export function BenchmarkForm({ benchmark, onSave, onCancel }: BenchmarkFormProp
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="tpot">每 Token 延迟（ms）*</Label>
+            <Label htmlFor="tpot">每 Token 延迟 TPOT (ms)*</Label>
             <Input
               id="tpot"
               type="number"
@@ -180,7 +180,7 @@ export function BenchmarkForm({ benchmark, onSave, onCancel }: BenchmarkFormProp
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="tokensPerSecond">吞吐量（tokens/秒）*</Label>
+            <Label htmlFor="tokensPerSecond">吞吐量 TPS (tokens/s)*</Label>
             <Input
               id="tokensPerSecond"
               type="number"
