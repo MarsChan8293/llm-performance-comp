@@ -1,4 +1,4 @@
 {
   "templateVersion": 0,
-  "dbType": null
+  "dbType": "kv"
 }
