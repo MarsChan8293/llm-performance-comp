@@ -13,13 +13,50 @@ interface BenchmarkCardProps {
   onDelete: (id: string) => void
 }
 
-export function BenchmarkCard({ 
-  benchmark, 
-  isSelected, 
-  onSelect, 
-  onEdit, 
-  onDelete 
+const summarizeMetrics = (metrics: Benchmark['metrics']) => {
+  if (!metrics.length) {
+    return {
+      ttft: 0,
+      tpot: 0,
+      tokensPerSecond: 0,
+      concurrency: 0,
+      inputLength: 0,
+      outputLength: 0,
+    }
+  }
+
+  const total = metrics.reduce(
+    (acc, m) => {
+      acc.ttft += m.ttft
+      acc.tpot += m.tpot
+      acc.tokensPerSecond += m.tokensPerSecond
+      acc.concurrency += m.concurrency
+      acc.inputLength += m.inputLength
+      acc.outputLength += m.outputLength
+      return acc
+    },
+    { ttft: 0, tpot: 0, tokensPerSecond: 0, concurrency: 0, inputLength: 0, outputLength: 0 }
+  )
+
+  const count = metrics.length || 1
+  return {
+    ttft: total.ttft / count,
+    tpot: total.tpot / count,
+    tokensPerSecond: total.tokensPerSecond / count,
+    concurrency: total.concurrency / count,
+    inputLength: total.inputLength / count,
+    outputLength: total.outputLength / count,
+  }
+}
+
+export function BenchmarkCard({
+  benchmark,
+  isSelected,
+  onSelect,
+  onEdit,
+  onDelete,
 }: BenchmarkCardProps) {
+  const summary = summarizeMetrics(benchmark.metrics)
   return (
     <Card className={`p-4 transition-all hover:shadow-md ${
       isSelected ? 'ring-2 ring-accent' : ''
@@ -62,28 +99,29 @@ export function BenchmarkCard({
             <Badge variant="outline">{benchmark.config.chipName}</Badge>
             <Badge variant="outline">{benchmark.config.framework}</Badge>
             <Badge variant="outline">{benchmark.config.networkConfig}</Badge>
+            <Badge variant="outline">{benchmark.metrics.length} 行</Badge>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
             <div>
               <p className="text-muted-foreground text-xs">首 Token 延迟</p>
-              <p className="font-mono font-medium">{benchmark.metrics.ttft.toFixed(2)} ms</p>
+              <p className="font-mono font-medium">{summary.ttft.toFixed(2)} ms</p>
             </div>
             <div>
               <p className="text-muted-foreground text-xs">每 Token 延迟</p>
-              <p className="font-mono font-medium">{benchmark.metrics.tpot.toFixed(2)} ms</p>
+              <p className="font-mono font-medium">{summary.tpot.toFixed(2)} ms</p>
             </div>
             <div>
               <p className="text-muted-foreground text-xs">吞吐量</p>
-              <p className="font-mono font-medium">{benchmark.metrics.tokensPerSecond.toFixed(2)} tok/s</p>
+              <p className="font-mono font-medium">{summary.tokensPerSecond.toFixed(2)} tok/s</p>
             </div>
             <div>
               <p className="text-muted-foreground text-xs">并发数</p>
-              <p className="font-mono font-medium">{benchmark.metrics.concurrency}</p>
+              <p className="font-mono font-medium">{summary.concurrency.toFixed(0)}</p>
             </div>
             <div>
               <p className="text-muted-foreground text-xs">输入/输出</p>
-              <p className="font-mono font-medium">{benchmark.metrics.inputLength}/{benchmark.metrics.outputLength}</p>
+              <p className="font-mono font-medium">{summary.inputLength.toFixed(0)}/{summary.outputLength.toFixed(0)}</p>
             </div>
             <div>
               <p className="text-muted-foreground text-xs">测试日期</p>

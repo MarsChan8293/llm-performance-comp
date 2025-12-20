@@ -9,7 +9,7 @@ import { BenchmarkForm } from '@/components/BenchmarkForm'
 import { CSVImportForm } from '@/components/CSVImportForm'
 import { BenchmarkCard } from '@/components/BenchmarkCard'
 import { ComparisonPanel } from '@/components/ComparisonPanel'
-import { Benchmark, BenchmarkConfig, PerformanceMetrics } from '@/lib/types'
+import { Benchmark, BenchmarkConfig, BenchmarkMetricsEntry } from '@/lib/types'
 import { Plus, MagnifyingGlass, ArrowsLeftRight, ChartBar, FileArrowDown } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 
@@ -42,7 +42,7 @@ function App() {
     return allBenchmarks.filter((b) => selectedIds.has(b.id))
   }, [benchmarks, selectedIds])
 
-  const handleSave = (config: BenchmarkConfig, metrics: PerformanceMetrics) => {
+  const handleSave = (config: BenchmarkConfig, metrics: BenchmarkMetricsEntry[]) => {
     if (editingBenchmark) {
       setBenchmarks((current) =>
         (current || []).map((b) =>

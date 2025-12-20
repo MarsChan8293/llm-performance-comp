@@ -1,19 +1,18 @@
-import { useState, useRef } from 'react'
+import { useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Badge } from '@/components/ui/badg
-import { Separator } from '@/components/ui/se
-import { parseCSV, ParsedBenchmarkRow } from '@/lib/csv-
-import { UploadSimple, FileArrowDown, X, CheckCircle,
+import { Separator } from '@/components/ui/separator'
+import { Badge } from '@/components/ui/badge'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { parseCSV, ParsedBenchmarkRow } from '@/lib/csv-parser'
+import { Benchmark, BenchmarkConfig } from '@/lib/types'
+import { UploadSimple, X, CheckCircle } from '@phosphor-icons/react'
+
 interface CSVImportFormProps {
+  onSave: (benchmarks: Benchmark[]) => void
   onCancel: () => void
-
-  const [config, setConfig] = useState<Omit<BenchmarkConfig, 'testDate'>>({
-
-    chipName: '',
-    frameworkParams: '',
-  const [testDate, set
 }
 
 export function CSVImportForm({ onSave, onCancel }: CSVImportFormProps) {
@@ -27,8 +26,8 @@ export function CSVImportForm({ onSave, onCancel }: CSVImportFormProps) {
   })
   const [testDate, setTestDate] = useState(new Date().toISOString().split('T')[0])
   const [parsedRows, setParsedRows] = useState<ParsedBenchmarkRow[]>([])
-  const [fileName, setFileName] = useState<string>('')
-  const [error, setError] = useState<string>('')
+  const [fileName, setFileName] = useState('')
+  const [error, setError] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -42,44 +41,45 @@ export function CSVImportForm({ onSave, onCancel }: CSVImportFormProps) {
     const reader = new FileReader()
     reader.onload = (event) => {
       try {
-        const text = event.target?.result as string
+        const text = (event.target?.result as string) || ''
         const rows = parseCSV(text)
         setParsedRows(rows)
       } catch (err) {
         setError(err instanceof Error ? err.message : '解析 CSV 文件时发生错误')
         setParsedRows([])
       }
-    i
-    config.modelName &&
+    }
+
+    reader.readAsText(file)
   }
 
   const handleRemoveFile = () => {
     setFileName('')
-        <div>
-          <p cla
+    setParsedRows([])
+    setError('')
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
-     
+    }
   }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    if (!isFormValid) return
 
-    if (parsedRows.length === 0) {
-      return
-    }
-
-    const benchmarks: Benchmark[] = parsedRows.map((row) => ({
-      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-               
-        ...config,
-        testDate,
+    const now = Date.now()
+    const importedBenchmarks: Benchmark[] = [
+      {
+        id: `csv-${now}`,
+        config: {
+          ...config,
+          testDate,
+        },
+        metrics: parsedRows.map((row) => row.metrics),
+        createdAt: new Date().toISOString(),
       },
-      metrics: row.metrics,
-      createdAt: new Date().toISOString(),
-       
+    ]
 
-                      
+    onSave(importedBenchmarks)
   }
 
   const isFormValid =
@@ -93,224 +93,183 @@ export function CSVImportForm({ onSave, onCancel }: CSVImportFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="space-y-3">
+        <Label htmlFor="csv-upload">上传 CSV 文件 *</Label>
+        <p className="text-sm text-muted-foreground">
+          需要包含列：Process Num, Input Length, Output Length, TTFT (ms), TPS (with prefill)，可选列：Total Time (ms)
+        </p>
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          id="csv-upload"
+          accept=".csv"
+          onChange={handleFileChange}
+          className="hidden"
+        />
+
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full h-32 border-2 border-dashed hover:border-primary hover:bg-accent/50 transition-colors"
+          onClick={() => fileInputRef.current?.click()}
+        >
+          <div className="flex flex-col items-center gap-2">
+            <UploadSimple size={32} className="text-muted-foreground" />
+            <div className="text-center">
+              <p className="font-medium">点击上传 CSV 文件</p>
+              <p className="text-sm text-muted-foreground">支持 .csv 格式</p>
+            </div>
+          </div>
+        </Button>
+
+        {fileName && (
+          <div className="flex items-center gap-3 text-sm bg-muted/60 px-3 py-2 rounded-md">
+            <CheckCircle size={16} className="text-green-600" />
+            <span className="font-medium truncate">{fileName}</span>
+            <Badge variant="secondary">{parsedRows.length} 条记录</Badge>
+            <Button variant="ghost" size="icon" className="ml-auto h-8 w-8" onClick={handleRemoveFile}>
+              <X size={16} />
+            </Button>
+          </div>
+        )}
+
+        {error && (
+          <Alert variant="destructive">
+            <AlertTitle>解析失败</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+      </div>
+
+      <Separator />
+
       <div className="space-y-4">
-        <>
-          <Label htmlFor="csv-upload">上传 CSV 文件 *</Label>
-          <p className="text-sm text-muted-foreground mb-3">
-            请上传包含性能数据的 CSV 文件（格式：Process Num, Input Length, Output Length, TTFT (ms), TPS (with prefill), Total Time (ms)）
-              
-
-          <input
-            ref={fileInputRef}
-            type="file"
-            id="csv-upload"
-            accept=".csv"
-            onChange={handleFileChange}
-            className="hidden"
+        <div>
+          <h3 className="text-lg font-semibold">配置信息</h3>
+          <p className="text-sm text-muted-foreground">以下配置将应用于所有导入的记录</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="modelName">模型名称 *</Label>
+            <Input
+              id="modelName"
+              required
+              value={config.modelName}
+              onChange={(e) => setConfig({ ...config, modelName: e.target.value })}
+              placeholder="例如：Qwen3-32B-FP8"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="serverName">服务器名称 *</Label>
+            <Input
+              id="serverName"
+              required
+              value={config.serverName}
+              onChange={(e) => setConfig({ ...config, serverName: e.target.value })}
+              placeholder="例如：服务器-A1"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="networkConfig">组网配置 *</Label>
+            <Input
+              id="networkConfig"
+              required
+              value={config.networkConfig}
+              onChange={(e) => setConfig({ ...config, networkConfig: e.target.value })}
+              placeholder="例如：8xH100-NVLink"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="chipName">AI 芯片 *</Label>
+            <Input
+              id="chipName"
+              required
+              value={config.chipName}
+              onChange={(e) => setConfig({ ...config, chipName: e.target.value })}
+              placeholder="例如：A100, H100"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="framework">推理框架 *</Label>
+            <Input
+              id="framework"
+              required
+              value={config.framework}
+              onChange={(e) => setConfig({ ...config, framework: e.target.value })}
+              placeholder="例如：vLLM, TensorRT-LLM"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="testDate">测试日期 *</Label>
+            <Input
+              id="testDate"
+              type="date"
+              required
+              value={testDate}
+              onChange={(e) => setTestDate(e.target.value)}
+            />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="frameworkParams">框架启动参数</Label>
+          <Input
+            id="frameworkParams"
+            value={config.frameworkParams}
+            onChange={(e) => setConfig({ ...config, frameworkParams: e.target.value })}
+            placeholder="例如：--max-batch-size=256 --gpu-memory-utilization=0.9"
           />
+        </div>
+      </div>
 
-          <div>
-                  placehol
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full h-32 border-2 border-dashed hover:border-primary hover:bg-accent/50 transition-colors"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <div className="flex flex-col items-center gap-2">
-                  <UploadSimple size={32} className="text-muted-foreground" />
-                  <div className="text-center">
-                    <p className="font-medium">点击上传 CSV 文件</p>
-                    <p className="text-sm text-muted-foreground">支持 .csv 格式</p>
+      {parsedRows.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold">预览数据</h3>
+            <Badge variant="secondary">{parsedRows.length} 条</Badge>
+          </div>
+          <ScrollArea className="h-64 border rounded-md p-4 bg-muted/40">
+            <div className="space-y-3">
+              {parsedRows.map((row, idx) => (
+                <div
+                  key={`row-${idx}`}
+                  className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm p-3 bg-background rounded-md shadow-sm"
+                >
+                  <div className="space-y-1">
+                    <p className="text-muted-foreground text-xs">并发数 (Process Num)</p>
+                    <p className="font-mono font-medium">{row.metrics.concurrency}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-muted-foreground text-xs">输入/输出 (tokens)</p>
+                    <p className="font-mono font-medium">{row.metrics.inputLength} / {row.metrics.outputLength}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-muted-foreground text-xs">TTFT (ms)</p>
+                    <p className="font-mono font-medium">{row.metrics.ttft.toFixed(2)}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-muted-foreground text-xs">TPOT (ms)</p>
+                    <p className="font-mono font-medium">{row.metrics.tpot.toFixed(2)}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-muted-foreground text-xs">TPS (tokens/s)</p>
+                    <p className="font-mono font-medium">{row.metrics.tokensPerSecond.toFixed(2)}</p>
                   </div>
                 </div>
-              </Button>
-                 
-                />
-              <div className="space-y-2">
-                <Input
-                  type="date"
-                  value={testDate}
-                />
+              ))}
             </div>
-              <Label htmlFor="import-frameworkPara
-                id="import-f
-                onChange={(e) => setConfig({ ...config, frameworkParams: e.target.value })}
-              />
-          </div>
-          <Separator />
-          <div className="spa
-              <h3 className="text-lg 
-            </div>
-            <ScrollArea className="h-64 border rounded-md">
-                {parsedRows.map((row, idx) => (
-                    <div clas
-                        <span cla
-                      </div>
-                        <s
-                        
-                      </d
-                        <span cla
-                      </div>
-                        <span c
-                          {row.metrics.tokensP
-                      </div>
-                   
-                      </div>
-                  </Card>
-              </div>
-          </div>
+          </ScrollArea>
+        </div>
       )}
 
-          取消
-              <Alert variant="destructive" className="mt-3">
-        </Button>
-    </form>
-}
-
-
-
-
-
-
-
-          <Separator />
-
-          <div className="space-y-4">
-            <div>
-              <h3 className="text-lg font-semibold">配置信息</h3>
-              <p className="text-sm text-muted-foreground">
-                以下配置将应用于所有 {parsedRows.length} 条导入的数据
-              </p>
-            </div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                id="import-frameworkParams"
-
-
-
-              />
-
-          </div>
-
-
-
-
-
-
-
-            </div>
-
-            <ScrollArea className="h-64 border rounded-md">
-
-                {parsedRows.map((row, idx) => (
-
-                    <div className="flex flex-wrap gap-4 text-sm">
-
-
-
-                      </div>
-
-
-
-
-
-                      </div>
-
-                        <span className="text-muted-foreground">TTFT：</span>
-
-                      </div>
-
-
-
-
-
-                      </div>
-                      <div>
-
-
-                      </div>
-
-                  </Card>
-
-              </div>
-
-          </div>
-
-      )}
-
-
-
+      <div className="flex justify-end gap-3 pt-2">
+        <Button type="button" variant="outline" onClick={onCancel}>
           取消
         </Button>
-
-
-
-
+        <Button type="submit" disabled={!isFormValid}>
+          导入并保存
+        </Button>
+      </div>
     </form>
-
+  )
 }

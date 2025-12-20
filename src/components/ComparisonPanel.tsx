@@ -1,6 +1,7 @@
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Benchmark } from '@/lib/types'
 import { ArrowUp, ArrowDown, Minus } from '@phosphor-icons/react'
 
@@ -9,54 +10,79 @@ interface ComparisonPanelProps {
   benchmark2: Benchmark
 }
 
-export function ComparisonPanel({ benchmark1, benchmark2 }: ComparisonPanelProps) {
-  const calculateDelta = (val1: number, val2: number, lowerIsBetter = false) => {
-    const delta = val2 - val1
-    const percentage = val1 !== 0 ? ((delta / val1) * 100) : 0
-    const isBetter = lowerIsBetter ? delta < 0 : delta > 0
-    const isEqual = Math.abs(percentage) < 0.01
-    
-    return { delta, percentage, isBetter, isEqual }
-  }
+type AggregatedMetric = {
+  concurrency: number
+  inputLength: number
+  outputLength: number
+  ttft: number
+  tpot: number
+  tokensPerSecond: number
+}
 
-  const MetricRow = ({ 
-    label, 
-    value1, 
-    value2, 
-    unit = '', 
-    lowerIsBetter = false 
-  }: { 
-    label: string
-    value1: number
-    value2: number
-    unit?: string
-    lowerIsBetter?: boolean 
-  }) => {
-    const { delta, percentage, isBetter, isEqual } = calculateDelta(value1, value2, lowerIsBetter)
-    
-    return (
-      <div className="grid grid-cols-[1fr_auto_1fr_auto] gap-4 items-center py-2">
-        <div className="text-right font-mono">{value1.toFixed(2)}{unit}</div>
-        <div className="text-sm text-muted-foreground min-w-[180px] text-center">{label}</div>
-        <div className="font-mono">{value2.toFixed(2)}{unit}</div>
-        <div className="min-w-[100px]">
-          {isEqual ? (
-            <div className="flex items-center gap-1 text-muted-foreground text-sm">
-              <Minus size={14} />
-              <span>0%</span>
-            </div>
-          ) : (
-            <div className={`flex items-center gap-1 text-sm font-medium ${
-              isBetter ? 'text-green-600' : 'text-red-600'
-            }`}>
-              {delta > 0 ? <ArrowUp size={14} weight="bold" /> : <ArrowDown size={14} weight="bold" />}
-              <span>{Math.abs(percentage).toFixed(1)}%</span>
-            </div>
-          )}
-        </div>
-      </div>
-    )
-  }
+type AggregatedMap = Map<string, AggregatedMetric>
+
+const keyFromMetric = (m: AggregatedMetric | Benchmark['metrics'][number]) =>
+  `${m.concurrency}-${m.inputLength}-${m.outputLength}`
+
+const averageMetrics = (metrics: Benchmark['metrics']): AggregatedMap => {
+  const map: AggregatedMap = new Map()
+  metrics.forEach((m) => {
+    const key = keyFromMetric(m)
+    const current = map.get(key)
+    if (!current) {
+      map.set(key, { ...m })
+    } else {
+      const countKey = `${key}-count`
+      const counts = (map as unknown as Record<string, number>)[countKey] ?? 1
+      const nextCount = counts + 1
+      map.set(key, {
+        concurrency: (current.concurrency * counts + m.concurrency) / nextCount,
+        inputLength: (current.inputLength * counts + m.inputLength) / nextCount,
+        outputLength: (current.outputLength * counts + m.outputLength) / nextCount,
+        ttft: (current.ttft * counts + m.ttft) / nextCount,
+        tpot: (current.tpot * counts + m.tpot) / nextCount,
+        tokensPerSecond: (current.tokensPerSecond * counts + m.tokensPerSecond) / nextCount,
+      })
+      ;(map as unknown as Record<string, number>)[countKey] = nextCount
+    }
+  })
+  return map
+}
+
+const buildRows = (mapA: AggregatedMap, mapB: AggregatedMap) => {
+  const keys = new Set<string>([...mapA.keys(), ...mapB.keys()])
+  return Array.from(keys)
+    .map((key) => {
+      const [concurrency, inputLength, outputLength] = key.split('-').map(Number)
+      return {
+        key,
+        concurrency,
+        inputLength,
+        outputLength,
+        a: mapA.get(key),
+        b: mapB.get(key),
+      }
+    })
+    .sort((a, b) => {
+      if (a.concurrency !== b.concurrency) return a.concurrency - b.concurrency
+      if (a.inputLength !== b.inputLength) return a.inputLength - b.inputLength
+      return a.outputLength - b.outputLength
+    })
+}
+
+const deltaInfo = (valA?: number, valB?: number, lowerIsBetter = false) => {
+  if (valA === undefined || valB === undefined) return null
+  const delta = valB - valA
+  const percentage = valA !== 0 ? (delta / valA) * 100 : 0
+  const isBetter = lowerIsBetter ? delta < 0 : delta > 0
+  const isEqual = Math.abs(percentage) < 0.01
+  return { delta, percentage, isBetter, isEqual }
+}
+
+export function ComparisonPanel({ benchmark1, benchmark2 }: ComparisonPanelProps) {
+  const mapA = averageMetrics(benchmark1.metrics)
+  const mapB = averageMetrics(benchmark2.metrics)
+  const rows = buildRows(mapA, mapB)
 
   const ConfigRow = ({ label, value1, value2 }: { label: string; value1: string; value2: string }) => (
     <div className="grid grid-cols-[1fr_auto_1fr] gap-4 items-start py-2">
@@ -120,47 +146,77 @@ export function ComparisonPanel({ benchmark1, benchmark2 }: ComparisonPanelProps
       </Card>
 
       <Card className="p-6">
-        <h3 className="font-semibold mb-4 text-lg">性能指标对比</h3>
-        <div className="space-y-1">
-          <MetricRow 
-            label="输入长度" 
-            value1={benchmark1.metrics.inputLength} 
-            value2={benchmark2.metrics.inputLength} 
-            unit=" tokens"
-          />
-          <MetricRow 
-            label="输出长度" 
-            value1={benchmark1.metrics.outputLength} 
-            value2={benchmark2.metrics.outputLength} 
-            unit=" tokens"
-          />
-          <MetricRow 
-            label="并发数" 
-            value1={benchmark1.metrics.concurrency} 
-            value2={benchmark2.metrics.concurrency}
-          />
-          <Separator className="my-3" />
-          <MetricRow 
-            label="首 Token 延迟（TTFT）" 
-            value1={benchmark1.metrics.ttft} 
-            value2={benchmark2.metrics.ttft} 
-            unit=" ms"
-            lowerIsBetter
-          />
-          <MetricRow 
-            label="每 Token 延迟（TPOT）" 
-            value1={benchmark1.metrics.tpot} 
-            value2={benchmark2.metrics.tpot} 
-            unit=" ms"
-            lowerIsBetter
-          />
-          <MetricRow 
-            label="吞吐量" 
-            value1={benchmark1.metrics.tokensPerSecond} 
-            value2={benchmark2.metrics.tokensPerSecond} 
-            unit=" tokens/s"
-          />
+        <h3 className="font-semibold mb-4 text-lg">性能指标对比（按输入组合逐行展示）</h3>
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-24">Process Num</TableHead>
+                <TableHead className="w-28">Input Length</TableHead>
+                <TableHead className="w-28">Output Length</TableHead>
+                <TableHead className="text-right">A · TTFT (ms)</TableHead>
+                <TableHead className="text-right">B · TTFT (ms)</TableHead>
+                <TableHead className="text-right">Δ TTFT</TableHead>
+                <TableHead className="text-right">A · TPOT (ms)</TableHead>
+                <TableHead className="text-right">B · TPOT (ms)</TableHead>
+                <TableHead className="text-right">Δ TPOT</TableHead>
+                <TableHead className="text-right">A · TPS</TableHead>
+                <TableHead className="text-right">B · TPS</TableHead>
+                <TableHead className="text-right">Δ TPS</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {rows.map((row) => {
+                const ttftDelta = deltaInfo(row.a?.ttft, row.b?.ttft, true)
+                const tpotDelta = deltaInfo(row.a?.tpot, row.b?.tpot, true)
+                const tpsDelta = deltaInfo(row.a?.tokensPerSecond, row.b?.tokensPerSecond, false)
+
+                const renderDelta = (delta: ReturnType<typeof deltaInfo>) => {
+                  if (!delta) return <span className="text-muted-foreground">—</span>
+                  if (delta.isEqual) return (
+                    <div className="flex items-center justify-end gap-1 text-muted-foreground text-sm">
+                      <Minus size={12} />
+                      <span>0%</span>
+                    </div>
+                  )
+                  return (
+                    <div className={`flex items-center justify-end gap-1 text-sm font-medium ${
+                      delta.isBetter ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      {delta.delta > 0 ? <ArrowUp size={12} weight="bold" /> : <ArrowDown size={12} weight="bold" />}
+                      <span>{Math.abs(delta.percentage).toFixed(1)}%</span>
+                    </div>
+                  )
+                }
+
+                const renderVal = (val?: number) =>
+                  val === undefined ? (
+                    <span className="text-muted-foreground">—</span>
+                  ) : (
+                    <span className="font-mono">{val.toFixed(2)}</span>
+                  )
+
+                return (
+                  <TableRow key={row.key}>
+                    <TableCell className="font-mono">{row.concurrency}</TableCell>
+                    <TableCell className="font-mono">{row.inputLength}</TableCell>
+                    <TableCell className="font-mono">{row.outputLength}</TableCell>
+                    <TableCell className="text-right">{renderVal(row.a?.ttft)}</TableCell>
+                    <TableCell className="text-right">{renderVal(row.b?.ttft)}</TableCell>
+                    <TableCell className="text-right">{renderDelta(ttftDelta)}</TableCell>
+                    <TableCell className="text-right">{renderVal(row.a?.tpot)}</TableCell>
+                    <TableCell className="text-right">{renderVal(row.b?.tpot)}</TableCell>
+                    <TableCell className="text-right">{renderDelta(tpotDelta)}</TableCell>
+                    <TableCell className="text-right">{renderVal(row.a?.tokensPerSecond)}</TableCell>
+                    <TableCell className="text-right">{renderVal(row.b?.tokensPerSecond)}</TableCell>
+                    <TableCell className="text-right">{renderDelta(tpsDelta)}</TableCell>
+                  </TableRow>
+                )
+              })}
+            </TableBody>
+          </Table>
         </div>
+        <p className="text-xs text-muted-foreground mt-3">Δ 为 B 相对 A 的变化百分比；TTFT/TPOT 下降为好，TPS 上升为好。</p>
       </Card>
     </div>
   )

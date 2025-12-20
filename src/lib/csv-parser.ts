@@ -1,8 +1,8 @@
-import { BenchmarkConfig, PerformanceMetrics } from './types'
+import { BenchmarkConfig, BenchmarkMetricsEntry } from './types'
 
 export interface ParsedBenchmarkRow {
   config: Omit<BenchmarkConfig, 'testDate'>
-  metrics: PerformanceMetrics
+  metrics: BenchmarkMetricsEntry
 }
 
 export function parseCSV(csvText: string): ParsedBenchmarkRow[] {

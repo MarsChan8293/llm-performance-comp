@@ -17,9 +17,12 @@ export interface PerformanceMetrics {
   tokensPerSecond: number
 }
 
+// Multiple metric entries are supported per benchmark to represent one dataset.
+export type BenchmarkMetricsEntry = PerformanceMetrics
+
 export interface Benchmark {
   id: string
   config: BenchmarkConfig
-  metrics: PerformanceMetrics
+  metrics: BenchmarkMetricsEntry[]
   createdAt: string
 }

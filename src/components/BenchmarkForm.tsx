@@ -3,11 +3,11 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
-import { Benchmark, BenchmarkConfig, PerformanceMetrics } from '@/lib/types'
+import { Benchmark, BenchmarkConfig, BenchmarkMetricsEntry } from '@/lib/types'
 
 interface BenchmarkFormProps {
   benchmark?: Benchmark
-  onSave: (config: BenchmarkConfig, metrics: PerformanceMetrics) => void
+  onSave: (config: BenchmarkConfig, metrics: BenchmarkMetricsEntry[]) => void
   onCancel: () => void
 }
 
@@ -24,20 +24,48 @@ export function BenchmarkForm({ benchmark, onSave, onCancel }: BenchmarkFormProp
     }
   )
 
-  const [metrics, setMetrics] = useState<PerformanceMetrics>(
-    benchmark?.metrics || {
-      inputLength: 128,
-      outputLength: 128,
-      concurrency: 1,
-      ttft: 0,
-      tpot: 0,
-      tokensPerSecond: 0,
-    }
+  const [metricsList, setMetricsList] = useState<BenchmarkMetricsEntry[]>(
+    benchmark?.metrics || [
+      {
+        inputLength: 128,
+        outputLength: 128,
+        concurrency: 1,
+        ttft: 0,
+        tpot: 0,
+        tokensPerSecond: 0,
+      },
+    ]
   )
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    onSave(config, metrics)
+    onSave(config, metricsList)
+  }
+
+  const updateMetric = (idx: number, field: keyof BenchmarkMetricsEntry, value: number) => {
+    setMetricsList((current) => {
+      const next = [...current]
+      next[idx] = { ...next[idx], [field]: value }
+      return next
+    })
+  }
+
+  const addMetricRow = () => {
+    setMetricsList((current) => [
+      ...current,
+      {
+        inputLength: 128,
+        outputLength: 128,
+        concurrency: 1,
+        ttft: 0,
+        tpot: 0,
+        tokensPerSecond: 0,
+      },
+    ])
+  }
+
+  const removeMetricRow = (idx: number) => {
+    setMetricsList((current) => current.filter((_, i) => i !== idx))
   }
 
   return (
@@ -120,77 +148,97 @@ export function BenchmarkForm({ benchmark, onSave, onCancel }: BenchmarkFormProp
       <Separator />
 
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold">性能指标</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="concurrency">并发数（Process Num）*</Label>
-            <Input
-              id="concurrency"
-              type="number"
-              min="1"
-              required
-              value={metrics.concurrency}
-              onChange={(e) => setMetrics({ ...metrics, concurrency: Number(e.target.value) })}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="inputLength">输入长度（tokens）*</Label>
-            <Input
-              id="inputLength"
-              type="number"
-              min="0"
-              required
-              value={metrics.inputLength}
-              onChange={(e) => setMetrics({ ...metrics, inputLength: Number(e.target.value) })}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="outputLength">输出长度（tokens）*</Label>
-            <Input
-              id="outputLength"
-              type="number"
-              min="0"
-              required
-              value={metrics.outputLength}
-              onChange={(e) => setMetrics({ ...metrics, outputLength: Number(e.target.value) })}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="ttft">首 Token 延迟 TTFT (ms)*</Label>
-            <Input
-              id="ttft"
-              type="number"
-              min="0"
-              step="0.01"
-              required
-              value={metrics.ttft}
-              onChange={(e) => setMetrics({ ...metrics, ttft: Number(e.target.value) })}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="tpot">每 Token 延迟 TPOT (ms)*</Label>
-            <Input
-              id="tpot"
-              type="number"
-              min="0"
-              step="0.01"
-              required
-              value={metrics.tpot}
-              onChange={(e) => setMetrics({ ...metrics, tpot: Number(e.target.value) })}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="tokensPerSecond">吞吐量 TPS (tokens/s)*</Label>
-            <Input
-              id="tokensPerSecond"
-              type="number"
-              min="0"
-              step="0.01"
-              required
-              value={metrics.tokensPerSecond}
-              onChange={(e) => setMetrics({ ...metrics, tokensPerSecond: Number(e.target.value) })}
-            />
-          </div>
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold">性能指标（可多行）</h3>
+          <Button type="button" variant="outline" onClick={addMetricRow}>
+            添加一行
+          </Button>
+        </div>
+
+        <div className="space-y-4">
+          {metricsList.map((metric, idx) => (
+            <div key={`metric-${idx}`} className="border rounded-md p-4 space-y-3">
+              <div className="flex justify-between items-center">
+                <h4 className="font-semibold text-sm">数据行 #{idx + 1}</h4>
+                {metricsList.length > 1 && (
+                  <Button type="button" size="sm" variant="ghost" onClick={() => removeMetricRow(idx)}>
+                    删除
+                  </Button>
+                )}
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor={`concurrency-${idx}`}>并发数（Process Num）*</Label>
+                  <Input
+                    id={`concurrency-${idx}`}
+                    type="number"
+                    min="1"
+                    required
+                    value={metric.concurrency}
+                    onChange={(e) => updateMetric(idx, 'concurrency', Number(e.target.value))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor={`inputLength-${idx}`}>输入长度（tokens）*</Label>
+                  <Input
+                    id={`inputLength-${idx}`}
+                    type="number"
+                    min="0"
+                    required
+                    value={metric.inputLength}
+                    onChange={(e) => updateMetric(idx, 'inputLength', Number(e.target.value))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor={`outputLength-${idx}`}>输出长度（tokens）*</Label>
+                  <Input
+                    id={`outputLength-${idx}`}
+                    type="number"
+                    min="0"
+                    required
+                    value={metric.outputLength}
+                    onChange={(e) => updateMetric(idx, 'outputLength', Number(e.target.value))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor={`ttft-${idx}`}>首 Token 延迟 TTFT (ms)*</Label>
+                  <Input
+                    id={`ttft-${idx}`}
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    required
+                    value={metric.ttft}
+                    onChange={(e) => updateMetric(idx, 'ttft', Number(e.target.value))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor={`tpot-${idx}`}>每 Token 延迟 TPOT (ms)*</Label>
+                  <Input
+                    id={`tpot-${idx}`}
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    required
+                    value={metric.tpot}
+                    onChange={(e) => updateMetric(idx, 'tpot', Number(e.target.value))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor={`tokensPerSecond-${idx}`}>吞吐量 TPS (tokens/s)*</Label>
+                  <Input
+                    id={`tokensPerSecond-${idx}`}
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    required
+                    value={metric.tokensPerSecond}
+                    onChange={(e) => updateMetric(idx, 'tokensPerSecond', Number(e.target.value))}
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
