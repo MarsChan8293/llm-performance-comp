@@ -43,60 +43,60 @@ export function BenchmarkForm({ benchmark, onSave, onCancel }: BenchmarkFormProp
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold">Configuration</h3>
+        <h3 className="text-lg font-semibold">配置信息</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="modelName">Model Name *</Label>
+            <Label htmlFor="modelName">模型名称 *</Label>
             <Input
               id="modelName"
               required
               value={config.modelName}
               onChange={(e) => setConfig({ ...config, modelName: e.target.value })}
-              placeholder="e.g., GPT-4, Llama-2-70B"
+              placeholder="例如：GPT-4, Llama-2-70B"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="serverName">Server Name *</Label>
+            <Label htmlFor="serverName">服务器名称 *</Label>
             <Input
               id="serverName"
               required
               value={config.serverName}
               onChange={(e) => setConfig({ ...config, serverName: e.target.value })}
-              placeholder="e.g., Server-A1"
+              placeholder="例如：服务器-A1"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="networkConfig">Network Configuration *</Label>
+            <Label htmlFor="networkConfig">组网配置 *</Label>
             <Input
               id="networkConfig"
               required
               value={config.networkConfig}
               onChange={(e) => setConfig({ ...config, networkConfig: e.target.value })}
-              placeholder="e.g., 8xA100-NVLink"
+              placeholder="例如：8xA100-NVLink"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="chipName">AI Chip *</Label>
+            <Label htmlFor="chipName">AI 芯片 *</Label>
             <Input
               id="chipName"
               required
               value={config.chipName}
               onChange={(e) => setConfig({ ...config, chipName: e.target.value })}
-              placeholder="e.g., A100, H100"
+              placeholder="例如：A100, H100"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="framework">Inference Framework *</Label>
+            <Label htmlFor="framework">推理框架 *</Label>
             <Input
               id="framework"
               required
               value={config.framework}
               onChange={(e) => setConfig({ ...config, framework: e.target.value })}
-              placeholder="e.g., vLLM, TensorRT-LLM"
+              placeholder="例如：vLLM, TensorRT-LLM"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="testDate">Test Date *</Label>
+            <Label htmlFor="testDate">测试日期 *</Label>
             <Input
               id="testDate"
               type="date"
@@ -107,12 +107,12 @@ export function BenchmarkForm({ benchmark, onSave, onCancel }: BenchmarkFormProp
           </div>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="frameworkParams">Framework Parameters</Label>
+          <Label htmlFor="frameworkParams">框架启动参数</Label>
           <Input
             id="frameworkParams"
             value={config.frameworkParams}
             onChange={(e) => setConfig({ ...config, frameworkParams: e.target.value })}
-            placeholder="e.g., --max-batch-size=256 --gpu-memory-utilization=0.9"
+            placeholder="例如：--max-batch-size=256 --gpu-memory-utilization=0.9"
           />
         </div>
       </div>
@@ -120,10 +120,10 @@ export function BenchmarkForm({ benchmark, onSave, onCancel }: BenchmarkFormProp
       <Separator />
 
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold">Performance Metrics</h3>
+        <h3 className="text-lg font-semibold">性能指标</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="inputLength">Input Length (tokens) *</Label>
+            <Label htmlFor="inputLength">输入长度（tokens）*</Label>
             <Input
               id="inputLength"
               type="number"
@@ -134,7 +134,7 @@ export function BenchmarkForm({ benchmark, onSave, onCancel }: BenchmarkFormProp
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="outputLength">Output Length (tokens) *</Label>
+            <Label htmlFor="outputLength">输出长度（tokens）*</Label>
             <Input
               id="outputLength"
               type="number"
@@ -145,7 +145,7 @@ export function BenchmarkForm({ benchmark, onSave, onCancel }: BenchmarkFormProp
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="concurrency">Concurrency *</Label>
+            <Label htmlFor="concurrency">并发数 *</Label>
             <Input
               id="concurrency"
               type="number"
@@ -156,7 +156,7 @@ export function BenchmarkForm({ benchmark, onSave, onCancel }: BenchmarkFormProp
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="ttft">TTFT (ms) *</Label>
+            <Label htmlFor="ttft">首 Token 延迟（ms）*</Label>
             <Input
               id="ttft"
               type="number"
@@ -168,7 +168,7 @@ export function BenchmarkForm({ benchmark, onSave, onCancel }: BenchmarkFormProp
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="tpot">TPOT (ms) *</Label>
+            <Label htmlFor="tpot">每 Token 延迟（ms）*</Label>
             <Input
               id="tpot"
               type="number"
@@ -180,7 +180,7 @@ export function BenchmarkForm({ benchmark, onSave, onCancel }: BenchmarkFormProp
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="tokensPerSecond">Tokens/Second *</Label>
+            <Label htmlFor="tokensPerSecond">吞吐量（tokens/秒）*</Label>
             <Input
               id="tokensPerSecond"
               type="number"
@@ -196,10 +196,10 @@ export function BenchmarkForm({ benchmark, onSave, onCancel }: BenchmarkFormProp
 
       <div className="flex gap-3 justify-end">
         <Button type="button" variant="outline" onClick={onCancel}>
-          Cancel
+          取消
         </Button>
         <Button type="submit">
-          {benchmark ? 'Update' : 'Save'} Benchmark
+          {benchmark ? '更新' : '保存'}
         </Button>
       </div>
     </form>

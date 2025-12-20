@@ -70,10 +70,10 @@ export function ComparisonPanel({ benchmark1, benchmark2 }: ComparisonPanelProps
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-4 items-start">
         <Card className="p-4 bg-muted/30">
-          <h3 className="font-semibold mb-2">Benchmark A</h3>
+          <h3 className="font-semibold mb-2">基准测试 A</h3>
           <div className="space-y-1">
-            <p className="text-sm"><span className="text-muted-foreground">Model:</span> {benchmark1.config.modelName}</p>
-            <p className="text-sm"><span className="text-muted-foreground">Server:</span> {benchmark1.config.serverName}</p>
+            <p className="text-sm"><span className="text-muted-foreground">模型：</span> {benchmark1.config.modelName}</p>
+            <p className="text-sm"><span className="text-muted-foreground">服务器：</span> {benchmark1.config.serverName}</p>
             <div className="flex gap-2 flex-wrap mt-2">
               <Badge variant="secondary">{benchmark1.config.chipName}</Badge>
               <Badge variant="secondary">{benchmark1.config.framework}</Badge>
@@ -82,14 +82,14 @@ export function ComparisonPanel({ benchmark1, benchmark2 }: ComparisonPanelProps
         </Card>
         
         <div className="hidden md:flex items-center justify-center py-8">
-          <div className="text-2xl font-bold text-muted-foreground">VS</div>
+          <div className="text-2xl font-bold text-muted-foreground">对比</div>
         </div>
         
         <Card className="p-4 bg-muted/30">
-          <h3 className="font-semibold mb-2">Benchmark B</h3>
+          <h3 className="font-semibold mb-2">基准测试 B</h3>
           <div className="space-y-1">
-            <p className="text-sm"><span className="text-muted-foreground">Model:</span> {benchmark2.config.modelName}</p>
-            <p className="text-sm"><span className="text-muted-foreground">Server:</span> {benchmark2.config.serverName}</p>
+            <p className="text-sm"><span className="text-muted-foreground">模型：</span> {benchmark2.config.modelName}</p>
+            <p className="text-sm"><span className="text-muted-foreground">服务器：</span> {benchmark2.config.serverName}</p>
             <div className="flex gap-2 flex-wrap mt-2">
               <Badge variant="secondary">{benchmark2.config.chipName}</Badge>
               <Badge variant="secondary">{benchmark2.config.framework}</Badge>
@@ -99,20 +99,20 @@ export function ComparisonPanel({ benchmark1, benchmark2 }: ComparisonPanelProps
       </div>
 
       <Card className="p-6">
-        <h3 className="font-semibold mb-4 text-lg">Configuration Comparison</h3>
+        <h3 className="font-semibold mb-4 text-lg">配置对比</h3>
         <div className="space-y-1">
           <ConfigRow 
-            label="Network Config" 
+            label="组网配置" 
             value1={benchmark1.config.networkConfig} 
             value2={benchmark2.config.networkConfig} 
           />
           <ConfigRow 
-            label="Framework Params" 
-            value1={benchmark1.config.frameworkParams || 'N/A'} 
-            value2={benchmark2.config.frameworkParams || 'N/A'} 
+            label="框架参数" 
+            value1={benchmark1.config.frameworkParams || '无'} 
+            value2={benchmark2.config.frameworkParams || '无'} 
           />
           <ConfigRow 
-            label="Test Date" 
+            label="测试日期" 
             value1={benchmark1.config.testDate} 
             value2={benchmark2.config.testDate} 
           />
@@ -120,42 +120,42 @@ export function ComparisonPanel({ benchmark1, benchmark2 }: ComparisonPanelProps
       </Card>
 
       <Card className="p-6">
-        <h3 className="font-semibold mb-4 text-lg">Performance Metrics</h3>
+        <h3 className="font-semibold mb-4 text-lg">性能指标对比</h3>
         <div className="space-y-1">
           <MetricRow 
-            label="Input Length" 
+            label="输入长度" 
             value1={benchmark1.metrics.inputLength} 
             value2={benchmark2.metrics.inputLength} 
             unit=" tokens"
           />
           <MetricRow 
-            label="Output Length" 
+            label="输出长度" 
             value1={benchmark1.metrics.outputLength} 
             value2={benchmark2.metrics.outputLength} 
             unit=" tokens"
           />
           <MetricRow 
-            label="Concurrency" 
+            label="并发数" 
             value1={benchmark1.metrics.concurrency} 
             value2={benchmark2.metrics.concurrency}
           />
           <Separator className="my-3" />
           <MetricRow 
-            label="TTFT (Time to First Token)" 
+            label="首 Token 延迟（TTFT）" 
             value1={benchmark1.metrics.ttft} 
             value2={benchmark2.metrics.ttft} 
             unit=" ms"
             lowerIsBetter
           />
           <MetricRow 
-            label="TPOT (Time per Output Token)" 
+            label="每 Token 延迟（TPOT）" 
             value1={benchmark1.metrics.tpot} 
             value2={benchmark2.metrics.tpot} 
             unit=" ms"
             lowerIsBetter
           />
           <MetricRow 
-            label="Throughput" 
+            label="吞吐量" 
             value1={benchmark1.metrics.tokensPerSecond} 
             value2={benchmark2.metrics.tokensPerSecond} 
             unit=" tokens/s"

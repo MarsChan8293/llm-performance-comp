@@ -66,27 +66,27 @@ export function BenchmarkCard({
 
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
             <div>
-              <p className="text-muted-foreground text-xs">TTFT</p>
+              <p className="text-muted-foreground text-xs">首 Token 延迟</p>
               <p className="font-mono font-medium">{benchmark.metrics.ttft.toFixed(2)} ms</p>
             </div>
             <div>
-              <p className="text-muted-foreground text-xs">TPOT</p>
+              <p className="text-muted-foreground text-xs">每 Token 延迟</p>
               <p className="font-mono font-medium">{benchmark.metrics.tpot.toFixed(2)} ms</p>
             </div>
             <div>
-              <p className="text-muted-foreground text-xs">Throughput</p>
+              <p className="text-muted-foreground text-xs">吞吐量</p>
               <p className="font-mono font-medium">{benchmark.metrics.tokensPerSecond.toFixed(2)} tok/s</p>
             </div>
             <div>
-              <p className="text-muted-foreground text-xs">Concurrency</p>
+              <p className="text-muted-foreground text-xs">并发数</p>
               <p className="font-mono font-medium">{benchmark.metrics.concurrency}</p>
             </div>
             <div>
-              <p className="text-muted-foreground text-xs">Input/Output</p>
+              <p className="text-muted-foreground text-xs">输入/输出</p>
               <p className="font-mono font-medium">{benchmark.metrics.inputLength}/{benchmark.metrics.outputLength}</p>
             </div>
             <div>
-              <p className="text-muted-foreground text-xs">Test Date</p>
+              <p className="text-muted-foreground text-xs">测试日期</p>
               <p className="font-medium">{benchmark.config.testDate}</p>
             </div>
           </div>

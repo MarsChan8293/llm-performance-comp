@@ -49,7 +49,7 @@ function App() {
             : b
         )
       )
-      toast.success('Benchmark updated successfully')
+      toast.success('基准测试更新成功')
     } else {
       const newBenchmark: Benchmark = {
         id: Date.now().toString(),
@@ -58,7 +58,7 @@ function App() {
         createdAt: new Date().toISOString(),
       }
       setBenchmarks((current) => [newBenchmark, ...(current || [])])
-      toast.success('Benchmark added successfully')
+      toast.success('基准测试添加成功')
     }
     setIsFormOpen(false)
     setEditingBenchmark(undefined)
@@ -71,7 +71,7 @@ function App() {
       newSet.delete(id)
       return newSet
     })
-    toast.success('Benchmark deleted')
+    toast.success('基准测试已删除')
   }
 
   const handleSelect = (id: string, selected: boolean) => {
@@ -79,7 +79,7 @@ function App() {
       const newSet = new Set(current)
       if (selected) {
         if (newSet.size >= 2) {
-          toast.error('You can only select 2 benchmarks for comparison')
+          toast.error('只能选择 2 个基准测试进行对比')
           return current
         }
         newSet.add(id)
@@ -113,20 +113,20 @@ function App() {
           <div className="flex items-center gap-3 mb-2">
             <ChartBar size={40} weight="duotone" className="text-primary" />
             <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
-              LLM Performance Benchmark
+              LLM 性能基准测试
             </h1>
           </div>
           <p className="text-muted-foreground">
-            Upload, manage, and compare AI model inference performance across different configurations
+            上传、管理并对比不同配置下的 AI 模型推理性能数据
           </p>
         </header>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
             <TabsList>
-              <TabsTrigger value="list">All Benchmarks</TabsTrigger>
+              <TabsTrigger value="list">所有基准测试</TabsTrigger>
               <TabsTrigger value="compare" disabled={selectedIds.size !== 2}>
-                Comparison
+                性能对比
                 {selectedIds.size > 0 && (
                   <Badge variant="secondary" className="ml-2">
                     {selectedIds.size}
@@ -139,12 +139,12 @@ function App() {
               {selectedIds.size === 2 && activeTab === 'list' && (
                 <Button onClick={handleCompare} variant="outline" className="flex-1 md:flex-none">
                   <ArrowsLeftRight size={18} className="mr-2" />
-                  Compare
+                  开始对比
                 </Button>
               )}
               <Button onClick={handleAddNew} className="flex-1 md:flex-none">
                 <Plus size={18} weight="bold" className="mr-2" />
-                Add Benchmark
+                添加基准测试
               </Button>
             </div>
           </div>
@@ -156,7 +156,7 @@ function App() {
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
               />
               <Input
-                placeholder="Search by model, server, chip, framework..."
+                placeholder="搜索模型、服务器、芯片、框架..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
@@ -167,17 +167,17 @@ function App() {
               <div className="text-center py-16">
                 <ChartBar size={64} className="mx-auto mb-4 text-muted-foreground" />
                 <h3 className="text-xl font-semibold mb-2">
-                  {searchQuery ? 'No benchmarks found' : 'No benchmarks yet'}
+                  {searchQuery ? '未找到相关基准测试' : '暂无基准测试数据'}
                 </h3>
                 <p className="text-muted-foreground mb-4">
                   {searchQuery
-                    ? 'Try adjusting your search query'
-                    : 'Add your first LLM performance benchmark to get started'}
+                    ? '请尝试调整搜索关键词'
+                    : '添加您的第一个 LLM 性能基准测试数据'}
                 </p>
                 {!searchQuery && (
                   <Button onClick={handleAddNew}>
                     <Plus size={18} weight="bold" className="mr-2" />
-                    Add Your First Benchmark
+                    添加第一个基准测试
                   </Button>
                 )}
               </div>
@@ -212,7 +212,7 @@ function App() {
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {editingBenchmark ? 'Edit Benchmark' : 'Add New Benchmark'}
+              {editingBenchmark ? '编辑基准测试' : '添加基准测试'}
             </DialogTitle>
           </DialogHeader>
           <BenchmarkForm
