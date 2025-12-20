@@ -1,23 +1,37 @@
-# ✨ Welcome to Your Spark Template!
-You've just launched your brand-new Spark Template Codespace — everything’s fired up and ready for you to explore, build, and create with Spark!
+# LLM 性能基准测试平台 (LLM Performance Comp)
 
-This template is your blank canvas. It comes with a minimal setup to help you get started quickly with Spark development.
+这是一个用于集中管理、比较和分析大语言模型 (LLM) 性能基准测试数据的综合平台。
 
-🚀 What's Inside?
-- A clean, minimal Spark environment
-- Pre-configured for local development
-- Ready to scale with your ideas
-  
-🧠 What Can You Do?
+## 核心功能
 
-Right now, this is just a starting point — the perfect place to begin building and testing your Spark applications.
+1.  **CSV 批量导入**：支持通过上传 CSV 文件快速导入多条基准测试结果。用户可以为导入的数据统一配置模型名称、服务器、芯片和框架等信息。
+2.  **手动添加数据**：提供直观的表单，支持手动输入单个基准测试的配置（如并发数、输入/输出长度）和性能指标（如 TTFT、TPOT、TPS）。
+3.  **基准测试管理**：提供可搜索、可过滤的列表视图，方便用户浏览、编辑和删除已保存的基准测试数据。
+4.  **性能对比分析**：支持选择两个基准测试进行侧边栏对比，直观展示各项性能指标的差异，并提供视觉化的增量分析。
 
-🧹 Just Exploring?
-No problem! If you were just checking things out and don’t need to keep this code:
+## 技术栈
 
-- Simply delete your Spark.
-- Everything will be cleaned up — no traces left behind.
+- **前端框架**: React 19 + TypeScript
+- **构建工具**: Vite
+- **样式库**: Tailwind CSS + Shadcn UI
+- **动画/图表**: Framer Motion + Recharts
+- **图标**: Lucide React + Phosphor Icons
+- **状态管理**: React Query (TanStack Query)
 
-📄 License For Spark Template Resources 
+### 安装依赖
+```bash
+npm install
+```
 
-The Spark Template files and resources from GitHub are licensed under the terms of the MIT license, Copyright GitHub, Inc.
+### 启动开发服务器
+```bash
+npm run dev
+```
+
+### 构建项目
+```bash
+npm run build
+```
+
+## 设计理念
+该项目旨在为开发者和研究人员提供一个专业、精准且高效的工具，通过数据可视化和对比分析，帮助优化 LLM 的配置和部署决策。
