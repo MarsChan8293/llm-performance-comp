@@ -60,6 +60,7 @@ export function parseCSV(csvText: string): ParsedBenchmarkRow[] {
         chipName: '',
         framework: '',
         frameworkParams: '',
+        notes: '',
       },
       metrics: {
         inputLength,

@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Benchmark } from '@/lib/types'
-import { PencilSimple, Trash, ChartBar } from '@phosphor-icons/react'
+import { PencilSimple, Trash } from '@phosphor-icons/react'
 
 interface BenchmarkCardProps {
   benchmark: Benchmark
@@ -13,42 +13,6 @@ interface BenchmarkCardProps {
   onDelete: (id: string) => void
 }
 
-const summarizeMetrics = (metrics: Benchmark['metrics']) => {
-  if (!metrics.length) {
-    return {
-      ttft: 0,
-      tpot: 0,
-      tokensPerSecond: 0,
-      concurrency: 0,
-      inputLength: 0,
-      outputLength: 0,
-    }
-  }
-
-  const total = metrics.reduce(
-    (acc, m) => {
-      acc.ttft += m.ttft
-      acc.tpot += m.tpot
-      acc.tokensPerSecond += m.tokensPerSecond
-      acc.concurrency += m.concurrency
-      acc.inputLength += m.inputLength
-      acc.outputLength += m.outputLength
-      return acc
-    },
-    { ttft: 0, tpot: 0, tokensPerSecond: 0, concurrency: 0, inputLength: 0, outputLength: 0 }
-  )
-
-  const count = metrics.length || 1
-  return {
-    ttft: total.ttft / count,
-    tpot: total.tpot / count,
-    tokensPerSecond: total.tokensPerSecond / count,
-    concurrency: total.concurrency / count,
-    inputLength: total.inputLength / count,
-    outputLength: total.outputLength / count,
-  }
-}
-
 export function BenchmarkCard({
   benchmark,
   isSelected,
@@ -56,7 +20,6 @@ export function BenchmarkCard({
   onEdit,
   onDelete,
 }: BenchmarkCardProps) {
-  const summary = summarizeMetrics(benchmark.metrics)
   return (
     <Card className={`p-4 transition-all hover:shadow-md ${
       isSelected ? 'ring-2 ring-accent' : ''
@@ -73,9 +36,11 @@ export function BenchmarkCard({
           <div className="flex items-start justify-between gap-2 mb-2">
             <div className="flex-1 min-w-0">
               <h3 className="font-semibold text-lg truncate">{benchmark.config.modelName}</h3>
-              <p className="text-sm text-muted-foreground">{benchmark.config.serverName}</p>
             </div>
             <div className="flex gap-1 flex-shrink-0">
+              <Badge variant="secondary" className="mr-2">
+                {benchmark.metrics.length} 条数据
+              </Badge>
               <Button 
                 size="icon" 
                 variant="ghost" 
@@ -95,38 +60,43 @@ export function BenchmarkCard({
             </div>
           </div>
 
-          <div className="flex gap-2 flex-wrap mb-3">
-            <Badge variant="outline">{benchmark.config.chipName}</Badge>
-            <Badge variant="outline">{benchmark.config.framework}</Badge>
-            <Badge variant="outline">{benchmark.config.networkConfig}</Badge>
-            <Badge variant="outline">{benchmark.metrics.length} 行</Badge>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
-            <div>
-              <p className="text-muted-foreground text-xs">首 Token 延迟</p>
-              <p className="font-mono font-medium">{summary.ttft.toFixed(2)} ms</p>
+          <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm border-t pt-4">
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground">模型名称</span>
+              <span className="font-medium">{benchmark.config.modelName}</span>
             </div>
-            <div>
-              <p className="text-muted-foreground text-xs">每 Token 延迟</p>
-              <p className="font-mono font-medium">{summary.tpot.toFixed(2)} ms</p>
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground">服务器名称</span>
+              <span className="font-medium">{benchmark.config.serverName}</span>
             </div>
-            <div>
-              <p className="text-muted-foreground text-xs">吞吐量</p>
-              <p className="font-mono font-medium">{summary.tokensPerSecond.toFixed(2)} tok/s</p>
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground">组网配置</span>
+              <span className="font-medium">{benchmark.config.networkConfig}</span>
             </div>
-            <div>
-              <p className="text-muted-foreground text-xs">并发数</p>
-              <p className="font-mono font-medium">{summary.concurrency.toFixed(0)}</p>
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground">AI 芯片</span>
+              <span className="font-medium">{benchmark.config.chipName}</span>
             </div>
-            <div>
-              <p className="text-muted-foreground text-xs">输入/输出</p>
-              <p className="font-mono font-medium">{summary.inputLength.toFixed(0)}/{summary.outputLength.toFixed(0)}</p>
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground">推理框架</span>
+              <span className="font-medium">{benchmark.config.framework}</span>
             </div>
-            <div>
-              <p className="text-muted-foreground text-xs">测试日期</p>
-              <p className="font-medium">{benchmark.config.testDate}</p>
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground">测试日期</span>
+              <span className="font-medium">{benchmark.config.testDate}</span>
             </div>
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground">框架启动参数</span>
+              <span className="font-mono text-xs bg-muted/50 px-2 py-1 rounded">
+                {benchmark.config.frameworkParams || '无'}
+              </span>
+            </div>
+            {benchmark.config.notes && (
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground">备注</span>
+                <span className="italic text-muted-foreground">{benchmark.config.notes}</span>
+              </div>
+            )}
           </div>
         </div>
       </div>

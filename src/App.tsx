@@ -134,7 +134,7 @@ function App() {
             <TabsList>
               <TabsTrigger value="list">所有基准测试</TabsTrigger>
               <TabsTrigger value="compare" disabled={selectedIds.size !== 2}>
-                性能对比
+                配置对比
                 {selectedIds.size > 0 && (
                   <Badge variant="secondary" className="ml-2">
                     {selectedIds.size}
@@ -147,7 +147,7 @@ function App() {
               {selectedIds.size === 2 && activeTab === 'list' && (
                 <Button onClick={handleCompare} variant="outline" className="flex-1 md:flex-none">
                   <ArrowsLeftRight size={18} className="mr-2" />
-                  开始对比
+                  对比配置
                 </Button>
               )}
               <Button 

@@ -6,6 +6,7 @@ export interface BenchmarkConfig {
   framework: string
   frameworkParams: string
   testDate: string
+  notes?: string
 }
 
 export interface PerformanceMetrics {

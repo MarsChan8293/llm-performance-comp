@@ -23,6 +23,7 @@ export function CSVImportForm({ onSave, onCancel }: CSVImportFormProps) {
     chipName: '',
     framework: '',
     frameworkParams: '',
+    notes: '',
   })
   const [testDate, setTestDate] = useState(new Date().toISOString().split('T')[0])
   const [parsedRows, setParsedRows] = useState<ParsedBenchmarkRow[]>([])
@@ -218,6 +219,15 @@ export function CSVImportForm({ onSave, onCancel }: CSVImportFormProps) {
             value={config.frameworkParams}
             onChange={(e) => setConfig({ ...config, frameworkParams: e.target.value })}
             placeholder="例如：--max-batch-size=256 --gpu-memory-utilization=0.9"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="notes">备注</Label>
+          <Input
+            id="notes"
+            value={config.notes}
+            onChange={(e) => setConfig({ ...config, notes: e.target.value })}
+            placeholder="例如：使用特定优化补丁，或测试环境说明"
           />
         </div>
       </div>
