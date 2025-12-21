@@ -55,12 +55,3 @@ The server uses \`joi\` to validate incoming data:
 ## CSV Parsing
 
 CSV parsing is handled on the backend using \`csv-parse\`. The logic calculates \`TPOT\` (Time Per Output Token) if \`Total Time (ms)\` is provided.
-
-## Testing
-
-Run backend tests (uses in-memory SQLite by default):
-
-```bash
-cd server
-npm test
-```
