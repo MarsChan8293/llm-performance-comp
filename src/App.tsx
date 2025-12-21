@@ -56,7 +56,7 @@ function App() {
       if (updated) toast.success('基准测试更新成功')
     } else {
       const newBenchmark: Benchmark = {
-        id: Date.now().toString(),
+        id: crypto.randomUUID(),
         config,
         metrics,
         createdAt: new Date().toISOString(),

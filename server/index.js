@@ -4,7 +4,7 @@ const cors = require('cors');
 const path = require('path');
 const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
-const { configSchema, metricsSchema, parseBenchmarkCSV } = require('./utils');
+const { configSchema, metricsSchema, messageSchema, parseBenchmarkCSV } = require('./utils');
 require('dotenv').config();
 
 const app = express();
@@ -290,12 +290,11 @@ app.get('/api/v1/messages', (req, res) => {
 
 // Add a new message
 app.post('/api/v1/messages', (req, res) => {
-  const { id, type, content, author, createdAt } = req.body;
-  
-  if (!type || !content) {
-    return res.status(400).json({ error: 'Type and content are required' });
-  }
+  const { error, value } = messageSchema.validate(req.body);
+  if (error) return res.status(400).json({ error: error.details[0].message });
 
+  const { id, type, content, author, createdAt } = value;
+  
   const queryText = 'INSERT INTO messages(id, type, content, author, created_at) VALUES(?, ?, ?, ?, ?)';
   const values = [id || uuidv4(), type, content, author || '匿名用户', createdAt || new Date().toISOString()];
 

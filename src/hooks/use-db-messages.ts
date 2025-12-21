@@ -1,32 +1,21 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Message } from '@/lib/types';
 import { toast } from 'sonner';
 
 export function useDbMessages() {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  const fetchMessages = useCallback(async () => {
-    try {
-      setIsLoading(true);
+  const { data: messages = [], isLoading } = useQuery<Message[]>({
+    queryKey: ['messages'],
+    queryFn: async () => {
       const response = await fetch('/api/v1/messages');
       if (!response.ok) throw new Error('Failed to fetch messages');
-      const data = await response.json();
-      setMessages(data);
-    } catch (error) {
-      console.error('Error fetching messages:', error);
-      // Don't show toast for every fetch error to avoid spamming
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+      return response.json();
+    },
+  });
 
-  useEffect(() => {
-    fetchMessages();
-  }, [fetchMessages]);
-
-  const addMessage = async (message: Message) => {
-    try {
+  const addMessageMutation = useMutation({
+    mutationFn: async (message: Message) => {
       const response = await fetch('/api/v1/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -38,41 +27,38 @@ export function useDbMessages() {
         throw new Error(errorData.error || 'Failed to add message');
       }
       
-      const savedMessage = await response.json();
-      
-      // Update local state
-      setMessages(prev => [savedMessage, ...prev]);
-      
-      return true;
-    } catch (error: any) {
-      console.error('Error adding message:', error);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['messages'] });
+    },
+    onError: (error: any) => {
       toast.error(`提交留言失败: ${error.message}`);
-      return false;
-    }
-  };
+    },
+  });
 
-  const deleteMessage = async (id: string) => {
-    try {
+  const deleteMessageMutation = useMutation({
+    mutationFn: async (id: string) => {
       const response = await fetch(`/api/v1/messages/${id}`, {
         method: 'DELETE',
       });
       if (!response.ok) throw new Error('Failed to delete message');
-      
-      setMessages(prev => prev.filter(m => m.id !== id));
-      toast.success('留言已删除');
       return true;
-    } catch (error) {
-      console.error('Error deleting message:', error);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['messages'] });
+      toast.success('留言已删除');
+    },
+    onError: () => {
       toast.error('删除失败');
-      return false;
-    }
-  };
+    },
+  });
 
   return {
     messages,
-    addMessage,
-    deleteMessage,
     isLoading,
-    refreshMessages: fetchMessages
+    addMessage: addMessageMutation.mutateAsync,
+    deleteMessage: deleteMessageMutation.mutateAsync,
+    refreshMessages: () => queryClient.invalidateQueries({ queryKey: ['messages'] })
   };
 }

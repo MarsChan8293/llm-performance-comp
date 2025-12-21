@@ -61,7 +61,7 @@ export function ComparisonPanel({ benchmark1, benchmark2 }: ComparisonPanelProps
     }
 
     const report: ComparisonReport = {
-      id: overwrite && existingReport ? existingReport.id : Date.now().toString(),
+      id: overwrite && existingReport ? existingReport.id : crypto.randomUUID(),
       benchmarkId1: benchmark1.id,
       benchmarkId2: benchmark2.id,
       modelName1: benchmark1.config.modelName,

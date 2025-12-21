@@ -25,6 +25,15 @@ const metricsSchema = Joi.object({
   tokensPerSecond: Joi.number().min(0).required(),
 });
 
+// Joi Schema for Messages
+const messageSchema = Joi.object({
+  id: Joi.string().optional(),
+  type: Joi.string().valid('feedback', 'feature_request').required(),
+  content: Joi.string().min(1).max(2000).required(),
+  author: Joi.string().max(50).allow('').optional(),
+  createdAt: Joi.string().isoDate().optional(),
+});
+
 /**
  * Parses CSV content and returns an array of PerformanceMetrics
  * @param {string} csvContent 
@@ -75,5 +84,6 @@ function parseBenchmarkCSV(csvContent) {
 module.exports = {
   configSchema,
   metricsSchema,
+  messageSchema,
   parseBenchmarkCSV,
 };
