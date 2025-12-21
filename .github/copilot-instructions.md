@@ -1,37 +1,39 @@
-# LLM Performance Comp - AI Coding Instructions
+# GitHub Copilot Instructions for LLM Performance Comp
+
+You are an expert AI programming assistant helping with the "LLM Performance Comp" project. This project is a benchmarking platform for Large Language Models.
 
 ## Project Overview
-A React-based platform for managing and comparing LLM performance benchmarks. It supports CSV batch imports, manual entry, and side-by-side performance analysis.
+- **Frontend**: React 19, TypeScript, Vite, Tailwind CSS, Shadcn UI.
+- **Backend**: Node.js, Express, SQLite (using `sqlite3` library).
+- **Data Flow**: Frontend communicates with the backend via RESTful API (`/api/v1/...`).
+- **Key Features**: CSV import, manual benchmark entry, side-by-side comparison, message board, and saved reports.
 
-## Architecture & State Management
-- **Framework**: React 19 + Vite + TypeScript.
-- **Persistence**: Uses `@github/spark/hooks`'s `useKV` for local storage persistence.
-  - Example: `const [benchmarks, setBenchmarks] = useKV<Benchmark[]>('benchmarks', [])` in [src/App.tsx](src/App.tsx).
-- **Data Model**: Defined in [src/lib/types.ts](src/lib/types.ts).
-  - `Benchmark`: Contains `config` (metadata) and `metrics` (array of `PerformanceMetrics`).
-  - `PerformanceMetrics`: Includes `ttft`, `tpot`, `tokensPerSecond`, etc.
+## Coding Standards
 
-## Key Patterns & Conventions
-- **CSV Parsing**: Logic resides in [src/lib/csv-parser.ts](src/lib/csv-parser.ts). It expects specific headers: `Process Num`, `Input Length`, `Output Length`, `TTFT (ms)`, `TPS (with prefill)`.
-- **Comparison Logic**: Implemented in [src/components/ComparisonPanel.tsx](src/components/ComparisonPanel.tsx). Metrics are aggregated and averaged by a unique key: `${concurrency}-${inputLength}-${outputLength}`.
-- **UI Components**: Built with **Shadcn UI** (Radix UI) and **Tailwind CSS 4.0**.
-  - Use the `cn` utility from [src/lib/utils.ts](src/lib/utils.ts) for class merging.
-  - Icons: Use **Phosphor Icons** via `@phosphor-icons/react`.
-- **Notifications**: Use `sonner` for user feedback (e.g., `toast.success('...')`).
-- **Imports**: Use the `@/` alias for `src/` directory imports.
+### Frontend
+- Use functional components with TypeScript.
+- Use Shadcn UI components located in `src/components/ui/`.
+- Use Lucide React or Phosphor Icons for iconography.
+- Use React Query for data fetching and mutations (hooks are in `src/hooks/`).
+- Follow the existing theme and styling patterns in `src/styles/theme.css` and `tailwind.config.js`.
+- Keep components modular and reusable.
 
-## Developer Workflows
-- **Development**: `npm run dev` to start the Vite server.
-- **Build**: `npm run build` (runs `tsc` and `vite build`).
-- **Linting**: `npm run lint`.
+### Backend
+- Express server is located in `server/index.js`.
+- Use SQLite for persistence. Database initialization and schema are in `server/index.js`.
+- API versioning: All endpoints should start with `/api/v1/`.
+- Use Joi for request body validation.
+- Handle errors gracefully and return appropriate HTTP status codes.
 
-## Design Principles (from PRD)
-- **Color Palette**: Blue-purple foundation (`oklch` based). See [theme.json](theme.json) and [tailwind.config.js](tailwind.config.js).
-- **Typography**: `Space Grotesk` for headings, `Inter` for body, `JetBrains Mono` for data.
-- **Tone**: Professional, precise, and technical.
+### General
+- Maintain the distinction between frontend (`src/`) and backend (`server/`).
+- Follow the PRD (available in `PRD.md` and `PRD-zh.md`) for feature requirements.
+- Use descriptive variable and function names.
+- Add comments for complex logic.
 
-## Critical Files
-- [src/App.tsx](src/App.tsx): Main application logic and state orchestration.
-- [src/lib/types.ts](src/lib/types.ts): Core data structures.
-- [src/lib/csv-parser.ts](src/lib/csv-parser.ts): CSV import logic.
-- [src/components/ComparisonPanel.tsx](src/components/ComparisonPanel.tsx): Performance delta calculations.
+## Project Structure
+- `src/components/`: React components.
+- `src/hooks/`: Custom React hooks for API interaction.
+- `src/lib/`: Utility functions and shared types.
+- `server/`: Backend server code and database.
+- `src/assets/documents/`: Sample CSV files for benchmarking.
