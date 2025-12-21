@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { useKV } from '@github/spark/hooks'
+import { useDbBenchmarks } from '@/hooks/use-db-benchmarks'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -14,7 +14,7 @@ import { Plus, MagnifyingGlass, ArrowsLeftRight, ChartBar, FileArrowDown } from 
 import { toast } from 'sonner'
 
 function App() {
-  const [benchmarks, setBenchmarks] = useKV<Benchmark[]>('benchmarks', [])
+  const { benchmarks, addBenchmark, deleteBenchmark, importBenchmarks, isLoading } = useDbBenchmarks()
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [searchQuery, setSearchQuery] = useState('')
   const [isFormOpen, setIsFormOpen] = useState(false)
@@ -42,16 +42,10 @@ function App() {
     return allBenchmarks.filter((b) => selectedIds.has(b.id))
   }, [benchmarks, selectedIds])
 
-  const handleSave = (config: BenchmarkConfig, metrics: BenchmarkMetricsEntry[]) => {
+  const handleSave = async (config: BenchmarkConfig, metrics: BenchmarkMetricsEntry[]) => {
     if (editingBenchmark) {
-      setBenchmarks((current) =>
-        (current || []).map((b) =>
-          b.id === editingBenchmark.id
-            ? { ...b, config, metrics }
-            : b
-        )
-      )
-      toast.success('基准测试更新成功')
+      const updated = await addBenchmark({ ...editingBenchmark, config, metrics })
+      if (updated) toast.success('基准测试更新成功')
     } else {
       const newBenchmark: Benchmark = {
         id: Date.now().toString(),
@@ -59,27 +53,27 @@ function App() {
         metrics,
         createdAt: new Date().toISOString(),
       }
-      setBenchmarks((current) => [newBenchmark, ...(current || [])])
-      toast.success('基准测试添加成功')
+      const added = await addBenchmark(newBenchmark)
+      if (added) toast.success('基准测试添加成功')
     }
     setIsFormOpen(false)
     setEditingBenchmark(undefined)
   }
 
-  const handleCSVImport = (importedBenchmarks: Benchmark[]) => {
-    setBenchmarks((current) => [...importedBenchmarks, ...(current || [])])
+  const handleCSVImport = async (importedBenchmarks: Benchmark[]) => {
+    await importBenchmarks(importedBenchmarks)
     setIsCSVImportOpen(false)
-    toast.success(`成功导入 ${importedBenchmarks.length} 条基准测试数据`)
   }
 
-  const handleDelete = (id: string) => {
-    setBenchmarks((current) => (current || []).filter((b) => b.id !== id))
-    setSelectedIds((current) => {
-      const newSet = new Set(current)
-      newSet.delete(id)
-      return newSet
-    })
-    toast.success('基准测试已删除')
+  const handleDelete = async (id: string) => {
+    const deleted = await deleteBenchmark(id)
+    if (deleted) {
+      setSelectedIds((current) => {
+        const newSet = new Set(current)
+        newSet.delete(id)
+        return newSet
+      })
+    }
   }
 
   const handleSelect = (id: string, selected: boolean) => {
@@ -179,7 +173,12 @@ function App() {
               />
             </div>
 
-            {filteredBenchmarks.length === 0 ? (
+            {isLoading ? (
+              <div className="text-center py-16">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                <p className="text-muted-foreground">正在从数据库加载数据...</p>
+              </div>
+            ) : filteredBenchmarks.length === 0 ? (
               <div className="text-center py-16">
                 <ChartBar size={64} className="mx-auto mb-4 text-muted-foreground" />
                 <h3 className="text-xl font-semibold mb-2">
