@@ -1,12 +1,12 @@
-import { BenchmarkConfig, BenchmarkMetricsEntry } from './types'
+import { BenchmarkMetricsEntry } from './types'
 import Papa from 'papaparse'
 
-export interface ParsedBenchmarkRow {
-  config: Omit<BenchmarkConfig, 'testDate'>
-  metrics: BenchmarkMetricsEntry
-}
-
-export function parseCSV(csvText: string): ParsedBenchmarkRow[] {
+/**
+ * Parses CSV content and returns an array of PerformanceMetrics
+ * @param csvText 
+ * @returns BenchmarkMetricsEntry[]
+ */
+export function parseCSV(csvText: string): BenchmarkMetricsEntry[] {
   const results = Papa.parse(csvText, {
     header: true,
     skipEmptyLines: true,
@@ -40,30 +40,19 @@ export function parseCSV(csvText: string): ParsedBenchmarkRow[] {
     const tokensPerSecond = row['TPS (with prefill)']
     const totalTime = row['Total Time (ms)'] || 0
 
+    // Calculate TPOT (Time Per Output Token)
+    // Formula: (Total Time - TTFT) / Output Length
     const tpot = totalTime > 0 && outputLength > 0 
       ? (totalTime - ttft) / outputLength 
       : 0
 
     return {
-      config: {
-        modelName: '',
-        serverName: '',
-        shardingConfig: '',
-        chipName: '',
-        framework: '',
-        submitter: '',
-        operatorAcceleration: '',
-        frameworkParams: '',
-        notes: '',
-      },
-      metrics: {
-        inputLength,
-        outputLength,
-        concurrency: processNum,
-        ttft,
-        tpot: parseFloat(tpot.toFixed(4)),
-        tokensPerSecond: parseFloat(tokensPerSecond.toFixed(4)),
-      },
+      inputLength,
+      outputLength,
+      concurrency: processNum,
+      ttft,
+      tpot: parseFloat(tpot.toFixed(4)),
+      tokensPerSecond: parseFloat(tokensPerSecond.toFixed(4)),
     }
   })
 }

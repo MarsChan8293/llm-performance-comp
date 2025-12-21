@@ -34,6 +34,17 @@ const messageSchema = Joi.object({
   createdAt: Joi.string().isoDate().optional(),
 });
 
+// Joi Schema for Comparison Reports
+const reportSchema = Joi.object({
+  id: Joi.string().optional(),
+  benchmarkId1: Joi.string().required(),
+  benchmarkId2: Joi.string().required(),
+  modelName1: Joi.string().required(),
+  modelName2: Joi.string().required(),
+  summary: Joi.string().min(1).required(),
+  createdAt: Joi.string().isoDate().optional(),
+});
+
 /**
  * Parses CSV content and returns an array of PerformanceMetrics
  * @param {string} csvContent 
@@ -85,5 +96,6 @@ module.exports = {
   configSchema,
   metricsSchema,
   messageSchema,
+  reportSchema,
   parseBenchmarkCSV,
 };

@@ -32,7 +32,7 @@ export function useDbMessages() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['messages'] });
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(`提交留言失败: ${error.message}`);
     },
   });

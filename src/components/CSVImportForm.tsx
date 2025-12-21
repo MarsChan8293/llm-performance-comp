@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -6,9 +6,9 @@ import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { parseCSV, ParsedBenchmarkRow } from '@/lib/csv-parser'
-import { Benchmark, BenchmarkConfig } from '@/lib/types'
-import { UploadSimple, X, CheckCircle } from '@phosphor-icons/react'
+import { parseCSV } from '@/lib/csv-parser'
+import { BenchmarkMetricsEntry, BenchmarkConfig } from '@/lib/types'
+import { UploadSimple, X, CheckCircle, Info } from '@phosphor-icons/react'
 
 interface CSVImportFormProps {
   onSave: (config: BenchmarkConfig, file: File) => void
@@ -28,11 +28,20 @@ export function CSVImportForm({ onSave, onCancel }: CSVImportFormProps) {
     notes: '',
   })
   const [testDate, setTestDate] = useState(new Date().toISOString().split('T')[0])
-  const [parsedRows, setParsedRows] = useState<ParsedBenchmarkRow[]>([])
+  const [parsedMetrics, setParsedMetrics] = useState<BenchmarkMetricsEntry[]>([])
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [fileName, setFileName] = useState('')
   const [error, setError] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Parse sharding config to show card count hint
+  const cardCountHint = useMemo(() => {
+    if (!config.shardingConfig) return null
+    const matches = config.shardingConfig.match(/\d+/g)
+    if (!matches) return null
+    const total = matches.reduce((acc, val) => acc * parseInt(val), 1)
+    return `预计使用 ${total} 块卡`
+  }, [config.shardingConfig])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -41,17 +50,17 @@ export function CSVImportForm({ onSave, onCancel }: CSVImportFormProps) {
     setSelectedFile(file)
     setFileName(file.name)
     setError('')
-    setParsedRows([])
+    setParsedMetrics([])
 
     const reader = new FileReader()
     reader.onload = (event) => {
       try {
         const text = (event.target?.result as string) || ''
-        const rows = parseCSV(text)
-        setParsedRows(rows)
+        const metrics = parseCSV(text)
+        setParsedMetrics(metrics)
       } catch (err) {
         setError(err instanceof Error ? err.message : '解析 CSV 文件时发生错误')
-        setParsedRows([])
+        setParsedMetrics([])
       }
     }
 
@@ -61,7 +70,7 @@ export function CSVImportForm({ onSave, onCancel }: CSVImportFormProps) {
   const handleRemoveFile = () => {
     setSelectedFile(null)
     setFileName('')
-    setParsedRows([])
+    setParsedMetrics([])
     setError('')
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
@@ -83,7 +92,7 @@ export function CSVImportForm({ onSave, onCancel }: CSVImportFormProps) {
 
 
   const isFormValid =
-    parsedRows.length > 0 &&
+    parsedMetrics.length > 0 &&
     config.modelName &&
     config.serverName &&
     config.shardingConfig &&
@@ -128,7 +137,7 @@ export function CSVImportForm({ onSave, onCancel }: CSVImportFormProps) {
           <div className="flex items-center gap-3 text-sm bg-muted/60 px-3 py-2 rounded-md">
             <CheckCircle size={16} className="text-green-600" />
             <span className="font-medium truncate">{fileName}</span>
-            <Badge variant="secondary">{parsedRows.length} 条记录</Badge>
+            <Badge variant="secondary">{parsedMetrics.length} 条记录</Badge>
             <Button variant="ghost" size="icon" className="ml-auto h-8 w-8" onClick={handleRemoveFile}>
               <X size={16} />
             </Button>
@@ -180,9 +189,15 @@ export function CSVImportForm({ onSave, onCancel }: CSVImportFormProps) {
               onChange={(e) => setConfig({ ...config, shardingConfig: e.target.value })}
               placeholder="例如：TP4, TP16, 2P2D, DP2TP4"
             />
-            <p className="text-[10px] text-muted-foreground">
-              支持解析卡数，如：TP4, TP16, 2P2D, DP2TP4
-            </p>
+            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+              <Info size={12} />
+              <span>支持解析卡数，如：TP4, TP16, 2P2D, DP2TP4</span>
+              {cardCountHint && (
+                <Badge variant="outline" className="ml-auto text-[10px] py-0 h-4 bg-primary/5 text-primary border-primary/20">
+                  {cardCountHint}
+                </Badge>
+              )}
+            </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="chipName">AI 芯片 *</Label>

@@ -30,7 +30,7 @@ export function useDbBenchmarks() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['benchmarks'] });
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(`保存数据失败: ${error.message}`);
     },
   });
@@ -73,7 +73,7 @@ export function useDbBenchmarks() {
       queryClient.invalidateQueries({ queryKey: ['benchmarks'] });
       toast.success('成功导入数据');
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(`导入失败: ${error.message}`);
     },
   });

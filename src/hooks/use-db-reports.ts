@@ -30,7 +30,7 @@ export function useDbReports() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reports'] });
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(`保存报告失败: ${error.message}`);
     },
   });

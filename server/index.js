@@ -4,7 +4,7 @@ const cors = require('cors');
 const path = require('path');
 const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
-const { configSchema, metricsSchema, messageSchema, parseBenchmarkCSV } = require('./utils');
+const { configSchema, metricsSchema, messageSchema, reportSchema, parseBenchmarkCSV } = require('./utils');
 require('dotenv').config();
 
 const app = express();
@@ -133,7 +133,12 @@ app.post('/api/v1/benchmarks', (req, res) => {
   }
 
   const benchmarkId = id || uuidv4();
-  const queryText = 'INSERT INTO benchmarks(id, config, metrics, created_at) VALUES(?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET config=excluded.config, metrics=excluded.metrics';
+  const queryText = `
+    /* Upsert benchmark: insert new or update config/metrics if ID exists */
+    INSERT INTO benchmarks(id, config, metrics, created_at) 
+    VALUES(?, ?, ?, ?) 
+    ON CONFLICT(id) DO UPDATE SET config=excluded.config, metrics=excluded.metrics
+  `;
   const values = [benchmarkId, JSON.stringify(config), JSON.stringify(metrics), createdAt || new Date().toISOString()];
 
   db.run(queryText, values, function(err) {
@@ -181,18 +186,31 @@ app.delete('/api/v1/benchmarks/:id', (req, res) => {
   const { id } = req.params;
   
   db.serialize(() => {
+    db.run('BEGIN TRANSACTION');
+    
     db.run('DELETE FROM benchmarks WHERE id = ?', id, function(err) {
       if (err) {
         console.error(err.message);
+        db.run('ROLLBACK');
         return res.status(500).json({ error: 'Internal server error' });
       }
       
       // Cascade delete reports associated with this benchmark
       db.run('DELETE FROM reports WHERE benchmark_id1 = ? OR benchmark_id2 = ?', [id, id], (err) => {
-        if (err) console.error('Error deleting associated reports:', err.message);
+        if (err) {
+          console.error('Error deleting associated reports:', err.message);
+          db.run('ROLLBACK');
+          return res.status(500).json({ error: 'Internal server error' });
+        }
+        
+        db.run('COMMIT', (err) => {
+          if (err) {
+            console.error('Error committing transaction:', err.message);
+            return res.status(500).json({ error: 'Internal server error' });
+          }
+          res.status(204).send();
+        });
       });
-
-      res.status(204).send();
     });
   });
 });
@@ -221,23 +239,23 @@ app.get('/api/v1/reports', (req, res) => {
 
 // Add or update a report
 app.post('/api/v1/reports', (req, res) => {
-  const { id, benchmarkId1, benchmarkId2, modelName1, modelName2, summary } = req.body;
-  
-  if (!benchmarkId1 || !benchmarkId2 || !summary) {
-    return res.status(400).json({ error: 'benchmarkId1, benchmarkId2, and summary are required' });
-  }
+  const { error, value } = reportSchema.validate(req.body);
+  if (error) return res.status(400).json({ error: error.details[0].message });
 
+  const { id, benchmarkId1, benchmarkId2, modelName1, modelName2, summary, createdAt } = value;
+  
   const reportId = id || uuidv4();
-  const createdAt = new Date().toISOString();
+  const reportCreatedAt = createdAt || new Date().toISOString();
   
   const queryText = `
+    /* Upsert report: insert new or update summary if ID exists */
     INSERT INTO reports(id, benchmark_id1, benchmark_id2, model_name1, model_name2, summary, created_at) 
     VALUES(?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(id) DO UPDATE SET 
       summary=excluded.summary,
       created_at=excluded.created_at
   `;
-  const values = [reportId, benchmarkId1, benchmarkId2, modelName1, modelName2, summary, createdAt];
+  const values = [reportId, benchmarkId1, benchmarkId2, modelName1, modelName2, summary, reportCreatedAt];
 
   db.run(queryText, values, function(err) {
     if (err) {
@@ -251,7 +269,7 @@ app.post('/api/v1/reports', (req, res) => {
       modelName1, 
       modelName2, 
       summary, 
-      createdAt 
+      createdAt: reportCreatedAt 
     });
   });
 });
@@ -328,6 +346,12 @@ app.delete('/api/v1/messages/:id', (req, res) => {
 // Backward compatibility for old routes (optional, but good practice)
 app.get('/api/benchmarks', (req, res) => res.redirect(301, '/api/v1/benchmarks'));
 app.post('/api/benchmarks', (req, res) => res.redirect(307, '/api/v1/benchmarks'));
+
+// Global Error Handler
+app.use((err, req, res, next) => {
+  console.error('Unhandled Error:', err.stack);
+  res.status(500).json({ error: 'Internal server error', message: err.message });
+});
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
