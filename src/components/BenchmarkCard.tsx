@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Benchmark } from '@/lib/types'
 import { PencilSimple, Trash } from '@phosphor-icons/react'
+import { parseGpuCount } from '@/lib/utils'
 
 interface BenchmarkCardProps {
   benchmark: Benchmark
@@ -62,6 +63,10 @@ export function BenchmarkCard({
 
           <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm border-t pt-4">
             <div className="flex items-center gap-2">
+              <span className="text-muted-foreground">提交人</span>
+              <span className="font-medium">{benchmark.config.submitter}</span>
+            </div>
+            <div className="flex items-center gap-2">
               <span className="text-muted-foreground">模型名称</span>
               <span className="font-medium">{benchmark.config.modelName}</span>
             </div>
@@ -70,8 +75,13 @@ export function BenchmarkCard({
               <span className="font-medium">{benchmark.config.serverName}</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-muted-foreground">组网配置</span>
-              <span className="font-medium">{benchmark.config.networkConfig}</span>
+              <span className="text-muted-foreground">切分参数</span>
+              <span className="font-medium">
+                {benchmark.config.shardingConfig}
+                <span className="ml-1 text-xs text-muted-foreground">
+                  ({parseGpuCount(benchmark.config.shardingConfig)}卡)
+                </span>
+              </span>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-muted-foreground">AI 芯片</span>
@@ -84,6 +94,10 @@ export function BenchmarkCard({
             <div className="flex items-center gap-2">
               <span className="text-muted-foreground">测试日期</span>
               <span className="font-medium">{benchmark.config.testDate}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground">算子加速</span>
+              <span className="font-medium">{benchmark.config.operatorAcceleration || '无'}</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-muted-foreground">框架启动参数</span>

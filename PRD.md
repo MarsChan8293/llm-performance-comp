@@ -10,6 +10,24 @@ A comprehensive LLM performance benchmarking platform for centralized performanc
 **Complexity Level**: Light Application (multiple features with basic state)
 - The app manages benchmark data entries, supports CRUD operations, CSV batch import, and provides comparison views without requiring complex multi-page navigation or advanced state management beyond persistent storage.
 
+## Technical Architecture
+
+### API Design (RESTful v1)
+
+The application uses a centralized backend with a RESTful API for data persistence and processing.
+
+#### Endpoints
+- `GET /api/v1/benchmarks`: Retrieve all benchmark entries.
+- `GET /api/v1/benchmarks/:id`: Retrieve a specific benchmark entry.
+- `POST /api/v1/benchmarks`: Manually add or update a benchmark entry (JSON).
+- `POST /api/v1/benchmarks/upload`: Upload a CSV file with performance metrics and associated configuration (Multipart/Form-Data).
+- `DELETE /api/v1/benchmarks/:id`: Remove a benchmark entry.
+
+#### Data Validation & Processing
+- **Backend Parsing**: CSV files are parsed on the server to ensure consistent metric calculation (e.g., TPOT).
+- **Strict Validation**: All incoming data is validated against Joi schemas to ensure integrity and consistency with the frontend TypeScript models.
+- **Versioning**: API is versioned (`v1`) to support future enhancements without breaking existing clients.
+
 ## Essential Features
 
 ### Feature 1: CSV Batch Import

@@ -56,9 +56,11 @@ export function parseCSV(csvText: string): ParsedBenchmarkRow[] {
       config: {
         modelName: '',
         serverName: '',
-        networkConfig: '',
+        shardingConfig: '',
         chipName: '',
         framework: '',
+        submitter: '',
+        operatorAcceleration: '',
         frameworkParams: '',
         notes: '',
       },

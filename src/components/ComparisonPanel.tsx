@@ -1,10 +1,24 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Card } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Benchmark, PerformanceMetrics } from '@/lib/types'
-import { CaretUp, CaretDown } from '@phosphor-icons/react'
-import { cn } from '@/lib/utils'
+import { Textarea } from '@/components/ui/textarea'
+import { Button } from '@/components/ui/button'
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle 
+} from '@/components/ui/alert-dialog'
+import { Benchmark, PerformanceMetrics, ComparisonReport } from '@/lib/types'
+import { CaretUp, CaretDown, FloppyDisk, FileText, Plus } from '@phosphor-icons/react'
+import { cn, parseGpuCount } from '@/lib/utils'
+import { useDbReports } from '@/hooks/use-db-reports'
+import { toast } from 'sonner'
 
 interface ComparisonPanelProps {
   benchmark1: Benchmark
@@ -12,6 +26,57 @@ interface ComparisonPanelProps {
 }
 
 export function ComparisonPanel({ benchmark1, benchmark2 }: ComparisonPanelProps) {
+  const { reports, addReport } = useDbReports()
+  const [summary, setSummary] = useState('')
+  const [isOverwriteDialogOpen, setIsOverwriteDialogOpen] = useState(false)
+  const [existingReport, setExistingReport] = useState<ComparisonReport | null>(null)
+
+  const gpuCount1 = useMemo(() => parseGpuCount(benchmark1.config.shardingConfig), [benchmark1.config.shardingConfig])
+  const gpuCount2 = useMemo(() => parseGpuCount(benchmark2.config.shardingConfig), [benchmark2.config.shardingConfig])
+
+  // Check for existing report for this pair
+  useEffect(() => {
+    const found = reports.find(r => 
+      (r.benchmarkId1 === benchmark1.id && r.benchmarkId2 === benchmark2.id) ||
+      (r.benchmarkId1 === benchmark2.id && r.benchmarkId2 === benchmark1.id)
+    )
+    if (found) {
+      setExistingReport(found)
+      setSummary(found.summary)
+    } else {
+      setExistingReport(null)
+      setSummary('')
+    }
+  }, [reports, benchmark1.id, benchmark2.id])
+
+  const handleSaveReport = async (overwrite = false) => {
+    if (!summary.trim()) {
+      toast.error('请输入总结内容')
+      return
+    }
+
+    if (existingReport && !overwrite) {
+      setIsOverwriteDialogOpen(true)
+      return
+    }
+
+    const report: ComparisonReport = {
+      id: overwrite && existingReport ? existingReport.id : Date.now().toString(),
+      benchmarkId1: benchmark1.id,
+      benchmarkId2: benchmark2.id,
+      modelName1: benchmark1.config.modelName,
+      modelName2: benchmark2.config.modelName,
+      summary: summary.trim(),
+      createdAt: new Date().toISOString()
+    }
+
+    const success = await addReport(report)
+    if (success) {
+      toast.success(overwrite ? '报告已更新' : '报告已保存')
+      setIsOverwriteDialogOpen(false)
+    }
+  }
+
   const aggregateMetrics = (metrics: PerformanceMetrics[]) => {
     const map = new Map<string, PerformanceMetrics[]>()
     metrics.forEach(m => {
@@ -133,6 +198,11 @@ export function ComparisonPanel({ benchmark1, benchmark2 }: ComparisonPanelProps
         </h3>
         <div className="space-y-1">
           <ConfigRow 
+            label="提交人" 
+            value1={benchmark1.config.submitter} 
+            value2={benchmark2.config.submitter} 
+          />
+          <ConfigRow 
             label="模型名称" 
             value1={benchmark1.config.modelName} 
             value2={benchmark2.config.modelName} 
@@ -153,9 +223,14 @@ export function ComparisonPanel({ benchmark1, benchmark2 }: ComparisonPanelProps
             value2={benchmark2.config.framework} 
           />
           <ConfigRow 
-            label="组网配置" 
-            value1={benchmark1.config.networkConfig} 
-            value2={benchmark2.config.networkConfig} 
+            label="切分参数" 
+            value1={benchmark1.config.shardingConfig} 
+            value2={benchmark2.config.shardingConfig} 
+          />
+          <ConfigRow 
+            label="算子加速" 
+            value1={benchmark1.config.operatorAcceleration || '无'} 
+            value2={benchmark2.config.operatorAcceleration || '无'} 
           />
           <ConfigRow 
             label="框架启动参数" 
@@ -211,6 +286,7 @@ export function ComparisonPanel({ benchmark1, benchmark2 }: ComparisonPanelProps
                   <TableHead className="text-center">TTFT (ms)</TableHead>
                   <TableHead className="text-center">TPOT (ms)</TableHead>
                   <TableHead className="text-center">TPS (tokens/s)</TableHead>
+                  <TableHead className="text-center">每卡 TPS</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -218,6 +294,9 @@ export function ComparisonPanel({ benchmark1, benchmark2 }: ComparisonPanelProps
                   const m1 = metrics1.get(key)
                   const m2 = metrics2.get(key)
                   const [c] = key.split('-')
+
+                  const tpsPerGpu1 = m1 ? m1.tokensPerSecond / gpuCount1 : undefined
+                  const tpsPerGpu2 = m2 ? m2.tokensPerSecond / gpuCount2 : undefined
 
                   return (
                     <TableRow key={`special-${key}`}>
@@ -249,6 +328,15 @@ export function ComparisonPanel({ benchmark1, benchmark2 }: ComparisonPanelProps
                             <span className="text-purple-600 font-bold">{m2?.tokensPerSecond.toFixed(1) ?? '-'}</span>
                           </div>
                           {formatDiff(m1?.tokensPerSecond, m2?.tokensPerSecond)}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col items-center gap-1">
+                          <div className="flex items-center gap-4 text-sm">
+                            <span className="text-blue-600 font-medium">{tpsPerGpu1?.toFixed(2) ?? '-'}</span>
+                            <span className="text-purple-600 font-bold">{tpsPerGpu2?.toFixed(2) ?? '-'}</span>
+                          </div>
+                          {formatDiff(tpsPerGpu1, tpsPerGpu2)}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -300,6 +388,16 @@ export function ComparisonPanel({ benchmark1, benchmark2 }: ComparisonPanelProps
                     </div>
                   </div>
                 </TableHead>
+                <TableHead className="text-center">
+                  <div className="flex flex-col items-center">
+                    <span>每卡 TPS</span>
+                    <div className="flex gap-2 text-[10px] mt-1">
+                      <span className="text-blue-600">A</span>
+                      <span className="text-muted-foreground">vs</span>
+                      <span className="text-purple-600">B</span>
+                    </div>
+                  </div>
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -307,6 +405,9 @@ export function ComparisonPanel({ benchmark1, benchmark2 }: ComparisonPanelProps
                 const m1 = metrics1.get(key)
                 const m2 = metrics2.get(key)
                 const [c, i, o] = key.split('-')
+
+                const tpsPerGpu1 = m1 ? m1.tokensPerSecond / gpuCount1 : undefined
+                const tpsPerGpu2 = m2 ? m2.tokensPerSecond / gpuCount2 : undefined
 
                 return (
                   <TableRow key={key}>
@@ -340,6 +441,15 @@ export function ComparisonPanel({ benchmark1, benchmark2 }: ComparisonPanelProps
                         {formatDiff(m1?.tokensPerSecond, m2?.tokensPerSecond)}
                       </div>
                     </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col items-center gap-1">
+                        <div className="flex items-center gap-4 text-sm">
+                          <span className="text-blue-600 font-medium">{tpsPerGpu1?.toFixed(2) ?? '-'}</span>
+                          <span className="text-purple-600 font-bold">{tpsPerGpu2?.toFixed(2) ?? '-'}</span>
+                        </div>
+                        {formatDiff(tpsPerGpu1, tpsPerGpu2)}
+                      </div>
+                    </TableCell>
                   </TableRow>
                 )
               })}
@@ -350,6 +460,66 @@ export function ComparisonPanel({ benchmark1, benchmark2 }: ComparisonPanelProps
           * 注：测试场景格式为“并发数 / 输入长度 / 输出长度”。百分比表示 B 相对于 A 的性能差异，绿色表示性能提升，红色表示性能下降。
         </p>
       </Card>
+
+      <Card className="p-6 border-primary/20 bg-primary/5">
+        <div className="flex items-center gap-2 mb-4">
+          <FileText size={24} className="text-primary" weight="duotone" />
+          <h3 className="font-semibold text-lg">性能对比总结</h3>
+          {existingReport && (
+            <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+              已有报告
+            </span>
+          )}
+        </div>
+        
+        <div className="space-y-4">
+          <Textarea
+            placeholder="在此输入人工总结的关键差异、性能瓶颈或推荐建议..."
+            className="min-h-[150px] bg-background/50 resize-none"
+            value={summary}
+            onChange={(e) => setSummary(e.target.value)}
+          />
+          
+          <div className="flex justify-end gap-3">
+            {existingReport && (
+              <Button 
+                variant="outline" 
+                onClick={() => handleSaveReport(false)}
+                className="gap-2"
+              >
+                <Plus size={18} />
+                另存为新报告
+              </Button>
+            )}
+            <Button 
+              onClick={() => handleSaveReport(!!existingReport)}
+              className="gap-2"
+            >
+              <FloppyDisk size={18} />
+              {existingReport ? '更新现有报告' : '保存对比报告'}
+            </Button>
+          </div>
+        </div>
+      </Card>
+
+      <AlertDialog open={isOverwriteDialogOpen} onOpenChange={setIsOverwriteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>发现现有报告</AlertDialogTitle>
+            <AlertDialogDescription>
+              这两个模型之间已经存在一份对比报告。您想覆盖现有报告，还是将其另存为一份新报告？
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setIsOverwriteDialogOpen(false)}>取消</AlertDialogCancel>
+            <Button variant="outline" onClick={() => {
+              setIsOverwriteDialogOpen(false);
+              handleSaveReport(false);
+            }}>另存为新报告</Button>
+            <AlertDialogAction onClick={() => handleSaveReport(true)}>覆盖现有报告</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

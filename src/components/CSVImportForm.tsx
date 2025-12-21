@@ -11,7 +11,7 @@ import { Benchmark, BenchmarkConfig } from '@/lib/types'
 import { UploadSimple, X, CheckCircle } from '@phosphor-icons/react'
 
 interface CSVImportFormProps {
-  onSave: (benchmarks: Benchmark[]) => void
+  onSave: (config: BenchmarkConfig, file: File) => void
   onCancel: () => void
 }
 
@@ -19,14 +19,17 @@ export function CSVImportForm({ onSave, onCancel }: CSVImportFormProps) {
   const [config, setConfig] = useState<Omit<BenchmarkConfig, 'testDate'>>({
     modelName: '',
     serverName: '',
-    networkConfig: '',
+    shardingConfig: '',
     chipName: '',
     framework: '',
+    submitter: '',
+    operatorAcceleration: '',
     frameworkParams: '',
     notes: '',
   })
   const [testDate, setTestDate] = useState(new Date().toISOString().split('T')[0])
   const [parsedRows, setParsedRows] = useState<ParsedBenchmarkRow[]>([])
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [fileName, setFileName] = useState('')
   const [error, setError] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -35,6 +38,7 @@ export function CSVImportForm({ onSave, onCancel }: CSVImportFormProps) {
     const file = e.target.files?.[0]
     if (!file) return
 
+    setSelectedFile(file)
     setFileName(file.name)
     setError('')
     setParsedRows([])
@@ -55,6 +59,7 @@ export function CSVImportForm({ onSave, onCancel }: CSVImportFormProps) {
   }
 
   const handleRemoveFile = () => {
+    setSelectedFile(null)
     setFileName('')
     setParsedRows([])
     setError('')
@@ -65,31 +70,26 @@ export function CSVImportForm({ onSave, onCancel }: CSVImportFormProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!isFormValid) return
+    if (!isFormValid || !selectedFile) return
 
-    const now = Date.now()
-    const importedBenchmarks: Benchmark[] = [
+    onSave(
       {
-        id: `csv-${now}`,
-        config: {
-          ...config,
-          testDate,
-        },
-        metrics: parsedRows.map((row) => row.metrics),
-        createdAt: new Date().toISOString(),
+        ...config,
+        testDate,
       },
-    ]
-
-    onSave(importedBenchmarks)
+      selectedFile
+    )
   }
+
 
   const isFormValid =
     parsedRows.length > 0 &&
     config.modelName &&
     config.serverName &&
-    config.networkConfig &&
+    config.shardingConfig &&
     config.chipName &&
     config.framework &&
+    config.submitter &&
     testDate
 
   return (
@@ -172,14 +172,17 @@ export function CSVImportForm({ onSave, onCancel }: CSVImportFormProps) {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="networkConfig">组网配置 *</Label>
+            <Label htmlFor="shardingConfig">切分参数 *</Label>
             <Input
-              id="networkConfig"
+              id="shardingConfig"
               required
-              value={config.networkConfig}
-              onChange={(e) => setConfig({ ...config, networkConfig: e.target.value })}
-              placeholder="例如：8xH100-NVLink"
+              value={config.shardingConfig}
+              onChange={(e) => setConfig({ ...config, shardingConfig: e.target.value })}
+              placeholder="例如：TP4, TP16, 2P2D, DP2TP4"
             />
+            <p className="text-[10px] text-muted-foreground">
+              支持解析卡数，如：TP4, TP16, 2P2D, DP2TP4
+            </p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="chipName">AI 芯片 *</Label>
@@ -202,6 +205,16 @@ export function CSVImportForm({ onSave, onCancel }: CSVImportFormProps) {
             />
           </div>
           <div className="space-y-2">
+            <Label htmlFor="submitter">提交人 *</Label>
+            <Input
+              id="submitter"
+              required
+              value={config.submitter}
+              onChange={(e) => setConfig({ ...config, submitter: e.target.value })}
+              placeholder="例如：张三"
+            />
+          </div>
+          <div className="space-y-2">
             <Label htmlFor="testDate">测试日期 *</Label>
             <Input
               id="testDate"
@@ -211,6 +224,15 @@ export function CSVImportForm({ onSave, onCancel }: CSVImportFormProps) {
               onChange={(e) => setTestDate(e.target.value)}
             />
           </div>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="operatorAcceleration">算子加速</Label>
+          <Input
+            id="operatorAcceleration"
+            value={config.operatorAcceleration}
+            onChange={(e) => setConfig({ ...config, operatorAcceleration: e.target.value })}
+            placeholder="例如：FlashAttention、TensorRT-LLM plugins"
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="frameworkParams">框架启动参数</Label>

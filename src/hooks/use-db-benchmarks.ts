@@ -9,7 +9,7 @@ export function useDbBenchmarks() {
   const fetchBenchmarks = useCallback(async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/benchmarks');
+      const response = await fetch('/api/v1/benchmarks');
       if (!response.ok) throw new Error('Failed to fetch benchmarks');
       const data = await response.json();
       setBenchmarks(data);
@@ -27,12 +27,15 @@ export function useDbBenchmarks() {
 
   const addBenchmark = async (benchmark: Benchmark) => {
     try {
-      const response = await fetch('/api/benchmarks', {
+      const response = await fetch('/api/v1/benchmarks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(benchmark),
       });
-      if (!response.ok) throw new Error('Failed to add benchmark');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to add benchmark');
+      }
       
       // Update local state
       setBenchmarks(prev => {
@@ -46,16 +49,16 @@ export function useDbBenchmarks() {
       });
       
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding benchmark:', error);
-      toast.error('保存数据失败');
+      toast.error(`保存数据失败: ${error.message}`);
       return false;
     }
   };
 
   const deleteBenchmark = async (id: string) => {
     try {
-      const response = await fetch(`/api/benchmarks/${id}`, {
+      const response = await fetch(`/api/v1/benchmarks/${id}`, {
         method: 'DELETE',
       });
       if (!response.ok) throw new Error('Failed to delete benchmark');
@@ -70,28 +73,32 @@ export function useDbBenchmarks() {
     }
   };
 
-  const importBenchmarks = async (newBenchmarks: Benchmark[]) => {
+  const importBenchmarks = async (config: any, file: File) => {
     try {
-      // For simplicity, we'll send them one by one or implement a bulk endpoint
-      // Here we'll just loop for now, but a bulk endpoint would be better
-      const promises = newBenchmarks.map(b => 
-        fetch('/api/benchmarks', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(b),
-        })
-      );
+      const formData = new FormData();
+      formData.append('config', JSON.stringify(config));
+      formData.append('file', file);
+
+      const response = await fetch('/api/v1/benchmarks/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to upload benchmarks');
+      }
       
-      await Promise.all(promises);
       await fetchBenchmarks(); // Refresh all
-      toast.success(`成功导入 ${newBenchmarks.length} 条数据`);
+      toast.success('成功导入数据');
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error importing benchmarks:', error);
-      toast.error('导入失败');
+      toast.error(`导入失败: ${error.message}`);
       return false;
     }
   };
+
 
   return {
     benchmarks,

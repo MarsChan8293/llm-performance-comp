@@ -10,6 +10,24 @@
 **复杂度级别**：轻量级应用（具有基本状态的多个功能）
 - 该应用管理基准测试数据条目，支持 CRUD 操作、CSV 批量导入，并提供对比视图，无需复杂的多页面导航或超出持久化存储的高级状态管理。
 
+## 技术架构
+
+### API 设计 (RESTful v1)
+
+应用程序采用集中式后端，通过 RESTful API 进行数据持久化和处理。
+
+#### 接口定义
+- `GET /api/v1/benchmarks`: 获取所有基准测试条目。
+- `GET /api/v1/benchmarks/:id`: 获取特定基准测试条目。
+- `POST /api/v1/benchmarks`: 手动添加或更新基准测试条目 (JSON)。
+- `POST /api/v1/benchmarks/upload`: 上传包含性能指标的 CSV 文件及相关配置 (Multipart/Form-Data)。
+- `DELETE /api/v1/benchmarks/:id`: 删除基准测试条目。
+
+#### 数据校验与处理
+- **后端解析**: CSV 文件在服务器端解析，以确保指标计算（如 TPOT）的一致性。
+- **严格校验**: 所有输入数据均通过 Joi Schema 进行校验，确保数据完整性并与前端 TypeScript 模型保持一致。
+- **版本化**: API 采用版本化管理 (`v1`)，以支持未来扩展而不影响现有客户端。
+
 ## 核心功能
 
 ### 功能 1：CSV 批量导入
