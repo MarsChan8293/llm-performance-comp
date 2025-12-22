@@ -269,38 +269,38 @@ export function CSVImportForm({ onSave, onCancel }: CSVImportFormProps) {
         </div>
       </div>
 
-      {parsedRows.length > 0 && (
+      {parsedMetrics.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold">预览数据</h3>
-            <Badge variant="secondary">{parsedRows.length} 条</Badge>
+            <Badge variant="secondary">{parsedMetrics.length} 条</Badge>
           </div>
           <ScrollArea className="h-64 border rounded-md p-4 bg-muted/40">
             <div className="space-y-3">
-              {parsedRows.map((row, idx) => (
+              {parsedMetrics.map((metrics, idx) => (
                 <div
                   key={`row-${idx}`}
                   className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm p-3 bg-background rounded-md shadow-sm"
                 >
                   <div className="space-y-1">
                     <p className="text-muted-foreground text-xs">并发数 (Process Num)</p>
-                    <p className="font-mono font-medium">{row.metrics.concurrency}</p>
+                    <p className="font-mono font-medium">{metrics.concurrency}</p>
                   </div>
                   <div className="space-y-1">
                     <p className="text-muted-foreground text-xs">输入/输出 (tokens)</p>
-                    <p className="font-mono font-medium">{row.metrics.inputLength} / {row.metrics.outputLength}</p>
+                    <p className="font-mono font-medium">{metrics.inputLength} / {metrics.outputLength}</p>
                   </div>
                   <div className="space-y-1">
                     <p className="text-muted-foreground text-xs">TTFT (ms)</p>
-                    <p className="font-mono font-medium">{row.metrics.ttft.toFixed(2)}</p>
+                    <p className="font-mono font-medium">{metrics.ttft.toFixed(2)}</p>
                   </div>
                   <div className="space-y-1">
                     <p className="text-muted-foreground text-xs">TPOT (ms)</p>
-                    <p className="font-mono font-medium">{row.metrics.tpot.toFixed(2)}</p>
+                    <p className="font-mono font-medium">{metrics.tpot.toFixed(2)}</p>
                   </div>
                   <div className="space-y-1">
                     <p className="text-muted-foreground text-xs">TPS (tokens/s)</p>
-                    <p className="font-mono font-medium">{row.metrics.tokensPerSecond.toFixed(2)}</p>
+                    <p className="font-mono font-medium">{metrics.tokensPerSecond.toFixed(2)}</p>
                   </div>
                 </div>
               ))}

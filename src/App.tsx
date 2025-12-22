@@ -70,7 +70,7 @@ function App() {
   }
 
   const handleCSVImport = async (config: BenchmarkConfig, file: File) => {
-    await importBenchmarks(config, file)
+    await importBenchmarks({ config, file })
     setIsCSVImportOpen(false)
   }
 
