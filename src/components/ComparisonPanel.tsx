@@ -174,13 +174,13 @@ export function ComparisonPanel({ benchmark1, benchmark2 }: ComparisonPanelProps
                 const renderDelta = (delta: ReturnType<typeof deltaInfo>) => {
                   if (!delta) return <span className="text-muted-foreground">—</span>
                   if (delta.isEqual) return (
-                    <div className="flex items-center justify-end gap-1 text-muted-foreground text-sm">
+                    <div className="flex items-center justify-end gap-1 text-muted-foreground text-base font-semibold">
                       <Minus size={12} />
                       <span>0%</span>
                     </div>
                   )
                   return (
-                    <div className={`flex items-center justify-end gap-1 text-sm font-medium ${
+                    <div className={`flex items-center justify-end gap-1 text-base font-semibold ${
                       delta.isBetter ? 'text-green-600' : 'text-red-600'
                     }`}>
                       {delta.delta > 0 ? <ArrowUp size={12} weight="bold" /> : <ArrowDown size={12} weight="bold" />}
