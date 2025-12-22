@@ -145,10 +145,10 @@ export function ComparisonPanel({ benchmark1, benchmark2 }: ComparisonPanelProps
 
     return (
       <span className={cn(
-        "text-xs font-medium flex items-center gap-0.5",
+        "text-base font-bold flex items-center gap-0.5",
         isBetter ? "text-emerald-600" : isWorse ? "text-rose-600" : "text-muted-foreground"
       )}>
-        {diff > 0 ? <CaretUp size={12} /> : diff < 0 ? <CaretDown size={12} /> : null}
+        {diff > 0 ? <CaretUp size={14} /> : diff < 0 ? <CaretDown size={14} /> : null}
         {Math.abs(diff).toFixed(1)}%
       </span>
     )
