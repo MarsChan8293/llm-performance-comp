@@ -10,6 +10,30 @@ A comprehensive LLM performance benchmarking platform for centralized performanc
 **Complexity Level**: Light Application (multiple features with basic state)
 - The app manages benchmark data entries, supports CRUD operations, CSV batch import, and provides comparison views without requiring complex multi-page navigation or advanced state management beyond persistent storage.
 
+## Technical Architecture
+
+### API Design (RESTful v1)
+
+The application uses a centralized backend with a RESTful API for data persistence and processing.
+
+#### Endpoints
+- `GET /api/v1/benchmarks`: Retrieve all benchmark entries.
+- `GET /api/v1/benchmarks/:id`: Retrieve a specific benchmark entry.
+- `POST /api/v1/benchmarks`: Manually add or update a benchmark entry (JSON).
+- `POST /api/v1/benchmarks/upload`: Upload a CSV file with performance metrics and associated configuration (Multipart/Form-Data).
+- `DELETE /api/v1/benchmarks/:id`: Remove a benchmark entry.
+- `GET /api/v1/reports`: Retrieve all comparison reports.
+- `POST /api/v1/reports`: Save a new comparison report.
+- `DELETE /api/v1/reports/:id`: Remove a comparison report.
+- `GET /api/v1/messages`: Retrieve all message board entries.
+- `POST /api/v1/messages`: Post a new message to the board.
+- `DELETE /api/v1/messages/:id`: Remove a message.
+
+#### Data Validation & Processing
+- **Backend Parsing**: CSV files are parsed on the server to ensure consistent metric calculation (e.g., TPOT).
+- **Strict Validation**: All incoming data is validated against Joi schemas to ensure integrity and consistency with the frontend TypeScript models.
+- **Versioning**: API is versioned (`v1`) to support future enhancements without breaking existing clients.
+
 ## Essential Features
 
 ### Feature 1: CSV Batch Import
@@ -39,6 +63,20 @@ A comprehensive LLM performance benchmarking platform for centralized performanc
 - **Trigger**: User selects two benchmarks and clicks "开始对比" or switches to Compare tab
 - **Progression**: Select first benchmark → Select second benchmark → Click Compare → View comparison panel with metrics side-by-side → Differences highlighted with visual indicators
 - **Success criteria**: Clear visual comparison showing all metrics, performance deltas calculated and displayed
+
+### Feature 5: Message Board
+- **Functionality**: A community board for users to post feedback, questions, or insights.
+- **Purpose**: Foster community engagement and provide a space for qualitative discussion alongside quantitative data.
+- **Trigger**: User navigates to the "Message Board" section.
+- **Progression**: View messages → Click "Post Message" → Fill content and author → Submit → Message appears on the board.
+- **Success criteria**: Messages persist, display correctly with author and timestamp, and can be deleted by authorized users.
+
+### Feature 6: Comparison Reports
+- **Functionality**: Save comparison results as persistent reports with summaries.
+- **Purpose**: Document and share specific performance findings for future reference.
+- **Trigger**: User clicks "Save Report" in the comparison view.
+- **Progression**: Perform comparison → Click Save Report → Add summary/notes → Save → Report appears in the "Reports" list.
+- **Success criteria**: Reports link back to original benchmarks, store summaries, and are accessible from a dedicated list view.
 
 ## Edge Case Handling
 - **Invalid CSV Format**: Display error message specifying missing columns or invalid data format

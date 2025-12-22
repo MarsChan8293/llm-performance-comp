@@ -13,14 +13,18 @@ interface BenchmarkFormProps {
 
 export function BenchmarkForm({ benchmark, onSave, onCancel }: BenchmarkFormProps) {
   const [config, setConfig] = useState<BenchmarkConfig>(
-    benchmark?.config || {
+    {
       modelName: '',
       serverName: '',
-      networkConfig: '',
+      shardingConfig: '',
       chipName: '',
       framework: '',
       frameworkParams: '',
       testDate: new Date().toISOString().split('T')[0],
+      submitter: '',
+      operatorAcceleration: '',
+      notes: '',
+      ...(benchmark?.config || {}),
     }
   )
 
@@ -94,14 +98,17 @@ export function BenchmarkForm({ benchmark, onSave, onCancel }: BenchmarkFormProp
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="networkConfig">组网配置 *</Label>
+            <Label htmlFor="shardingConfig">切分参数 *</Label>
             <Input
-              id="networkConfig"
+              id="shardingConfig"
               required
-              value={config.networkConfig}
-              onChange={(e) => setConfig({ ...config, networkConfig: e.target.value })}
-              placeholder="例如：8xH100-NVLink"
+              value={config.shardingConfig}
+              onChange={(e) => setConfig({ ...config, shardingConfig: e.target.value })}
+              placeholder="例如：TP4, TP16, 2P2D, DP2TP4"
             />
+            <p className="text-[10px] text-muted-foreground">
+              支持解析卡数，如：TP4, TP16, 2P2D, DP2TP4
+            </p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="chipName">AI 芯片 *</Label>
@@ -133,6 +140,25 @@ export function BenchmarkForm({ benchmark, onSave, onCancel }: BenchmarkFormProp
               onChange={(e) => setConfig({ ...config, testDate: e.target.value })}
             />
           </div>
+          <div className="space-y-2">
+            <Label htmlFor="submitter">提交人 *</Label>
+            <Input
+              id="submitter"
+              required
+              value={config.submitter}
+              onChange={(e) => setConfig({ ...config, submitter: e.target.value })}
+              placeholder="例如：张三"
+            />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="operatorAcceleration">算子加速</Label>
+          <Input
+            id="operatorAcceleration"
+            value={config.operatorAcceleration}
+            onChange={(e) => setConfig({ ...config, operatorAcceleration: e.target.value })}
+            placeholder="例如：FlashAttention、TensorRT-LLM plugins"
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="frameworkParams">框架启动参数</Label>
@@ -141,6 +167,15 @@ export function BenchmarkForm({ benchmark, onSave, onCancel }: BenchmarkFormProp
             value={config.frameworkParams}
             onChange={(e) => setConfig({ ...config, frameworkParams: e.target.value })}
             placeholder="例如：--max-batch-size=256 --gpu-memory-utilization=0.9"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="notes">备注</Label>
+          <Input
+            id="notes"
+            value={config.notes}
+            onChange={(e) => setConfig({ ...config, notes: e.target.value })}
+            placeholder="例如：使用特定优化补丁，或测试环境说明"
           />
         </div>
       </div>

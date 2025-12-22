@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -6,12 +6,12 @@ import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { parseCSV, ParsedBenchmarkRow } from '@/lib/csv-parser'
-import { Benchmark, BenchmarkConfig } from '@/lib/types'
-import { UploadSimple, X, CheckCircle } from '@phosphor-icons/react'
+import { parseCSV } from '@/lib/csv-parser'
+import { BenchmarkMetricsEntry, BenchmarkConfig } from '@/lib/types'
+import { UploadSimple, X, CheckCircle, Info } from '@phosphor-icons/react'
 
 interface CSVImportFormProps {
-  onSave: (benchmarks: Benchmark[]) => void
+  onSave: (config: BenchmarkConfig, file: File) => void
   onCancel: () => void
 }
 
@@ -19,34 +19,48 @@ export function CSVImportForm({ onSave, onCancel }: CSVImportFormProps) {
   const [config, setConfig] = useState<Omit<BenchmarkConfig, 'testDate'>>({
     modelName: '',
     serverName: '',
-    networkConfig: '',
+    shardingConfig: '',
     chipName: '',
     framework: '',
+    submitter: '',
+    operatorAcceleration: '',
     frameworkParams: '',
+    notes: '',
   })
   const [testDate, setTestDate] = useState(new Date().toISOString().split('T')[0])
-  const [parsedRows, setParsedRows] = useState<ParsedBenchmarkRow[]>([])
+  const [parsedMetrics, setParsedMetrics] = useState<BenchmarkMetricsEntry[]>([])
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [fileName, setFileName] = useState('')
   const [error, setError] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Parse sharding config to show card count hint
+  const cardCountHint = useMemo(() => {
+    if (!config.shardingConfig) return null
+    const matches = config.shardingConfig.match(/\d+/g)
+    if (!matches) return null
+    const total = matches.reduce((acc, val) => acc * parseInt(val), 1)
+    return `预计使用 ${total} 块卡`
+  }, [config.shardingConfig])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
 
+    setSelectedFile(file)
     setFileName(file.name)
     setError('')
-    setParsedRows([])
+    setParsedMetrics([])
 
     const reader = new FileReader()
     reader.onload = (event) => {
       try {
         const text = (event.target?.result as string) || ''
-        const rows = parseCSV(text)
-        setParsedRows(rows)
+        const metrics = parseCSV(text)
+        setParsedMetrics(metrics)
       } catch (err) {
         setError(err instanceof Error ? err.message : '解析 CSV 文件时发生错误')
-        setParsedRows([])
+        setParsedMetrics([])
       }
     }
 
@@ -54,8 +68,9 @@ export function CSVImportForm({ onSave, onCancel }: CSVImportFormProps) {
   }
 
   const handleRemoveFile = () => {
+    setSelectedFile(null)
     setFileName('')
-    setParsedRows([])
+    setParsedMetrics([])
     setError('')
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
@@ -64,31 +79,26 @@ export function CSVImportForm({ onSave, onCancel }: CSVImportFormProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!isFormValid) return
+    if (!isFormValid || !selectedFile) return
 
-    const now = Date.now()
-    const importedBenchmarks: Benchmark[] = [
+    onSave(
       {
-        id: `csv-${now}`,
-        config: {
-          ...config,
-          testDate,
-        },
-        metrics: parsedRows.map((row) => row.metrics),
-        createdAt: new Date().toISOString(),
+        ...config,
+        testDate,
       },
-    ]
-
-    onSave(importedBenchmarks)
+      selectedFile
+    )
   }
 
+
   const isFormValid =
-    parsedRows.length > 0 &&
+    parsedMetrics.length > 0 &&
     config.modelName &&
     config.serverName &&
-    config.networkConfig &&
+    config.shardingConfig &&
     config.chipName &&
     config.framework &&
+    config.submitter &&
     testDate
 
   return (
@@ -127,7 +137,7 @@ export function CSVImportForm({ onSave, onCancel }: CSVImportFormProps) {
           <div className="flex items-center gap-3 text-sm bg-muted/60 px-3 py-2 rounded-md">
             <CheckCircle size={16} className="text-green-600" />
             <span className="font-medium truncate">{fileName}</span>
-            <Badge variant="secondary">{parsedRows.length} 条记录</Badge>
+            <Badge variant="secondary">{parsedMetrics.length} 条记录</Badge>
             <Button variant="ghost" size="icon" className="ml-auto h-8 w-8" onClick={handleRemoveFile}>
               <X size={16} />
             </Button>
@@ -171,14 +181,23 @@ export function CSVImportForm({ onSave, onCancel }: CSVImportFormProps) {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="networkConfig">组网配置 *</Label>
+            <Label htmlFor="shardingConfig">切分参数 *</Label>
             <Input
-              id="networkConfig"
+              id="shardingConfig"
               required
-              value={config.networkConfig}
-              onChange={(e) => setConfig({ ...config, networkConfig: e.target.value })}
-              placeholder="例如：8xH100-NVLink"
+              value={config.shardingConfig}
+              onChange={(e) => setConfig({ ...config, shardingConfig: e.target.value })}
+              placeholder="例如：TP4, TP16, 2P2D, DP2TP4"
             />
+            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+              <Info size={12} />
+              <span>支持解析卡数，如：TP4, TP16, 2P2D, DP2TP4</span>
+              {cardCountHint && (
+                <Badge variant="outline" className="ml-auto text-[10px] py-0 h-4 bg-primary/5 text-primary border-primary/20">
+                  {cardCountHint}
+                </Badge>
+              )}
+            </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="chipName">AI 芯片 *</Label>
@@ -201,6 +220,16 @@ export function CSVImportForm({ onSave, onCancel }: CSVImportFormProps) {
             />
           </div>
           <div className="space-y-2">
+            <Label htmlFor="submitter">提交人 *</Label>
+            <Input
+              id="submitter"
+              required
+              value={config.submitter}
+              onChange={(e) => setConfig({ ...config, submitter: e.target.value })}
+              placeholder="例如：张三"
+            />
+          </div>
+          <div className="space-y-2">
             <Label htmlFor="testDate">测试日期 *</Label>
             <Input
               id="testDate"
@@ -212,6 +241,15 @@ export function CSVImportForm({ onSave, onCancel }: CSVImportFormProps) {
           </div>
         </div>
         <div className="space-y-2">
+          <Label htmlFor="operatorAcceleration">算子加速</Label>
+          <Input
+            id="operatorAcceleration"
+            value={config.operatorAcceleration}
+            onChange={(e) => setConfig({ ...config, operatorAcceleration: e.target.value })}
+            placeholder="例如：FlashAttention、TensorRT-LLM plugins"
+          />
+        </div>
+        <div className="space-y-2">
           <Label htmlFor="frameworkParams">框架启动参数</Label>
           <Input
             id="frameworkParams"
@@ -220,40 +258,49 @@ export function CSVImportForm({ onSave, onCancel }: CSVImportFormProps) {
             placeholder="例如：--max-batch-size=256 --gpu-memory-utilization=0.9"
           />
         </div>
+        <div className="space-y-2">
+          <Label htmlFor="notes">备注</Label>
+          <Input
+            id="notes"
+            value={config.notes}
+            onChange={(e) => setConfig({ ...config, notes: e.target.value })}
+            placeholder="例如：使用特定优化补丁，或测试环境说明"
+          />
+        </div>
       </div>
 
-      {parsedRows.length > 0 && (
+      {parsedMetrics.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold">预览数据</h3>
-            <Badge variant="secondary">{parsedRows.length} 条</Badge>
+            <Badge variant="secondary">{parsedMetrics.length} 条</Badge>
           </div>
           <ScrollArea className="h-64 border rounded-md p-4 bg-muted/40">
             <div className="space-y-3">
-              {parsedRows.map((row, idx) => (
+              {parsedMetrics.map((metrics, idx) => (
                 <div
                   key={`row-${idx}`}
                   className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm p-3 bg-background rounded-md shadow-sm"
                 >
                   <div className="space-y-1">
                     <p className="text-muted-foreground text-xs">并发数 (Process Num)</p>
-                    <p className="font-mono font-medium">{row.metrics.concurrency}</p>
+                    <p className="font-mono font-medium">{metrics.concurrency}</p>
                   </div>
                   <div className="space-y-1">
                     <p className="text-muted-foreground text-xs">输入/输出 (tokens)</p>
-                    <p className="font-mono font-medium">{row.metrics.inputLength} / {row.metrics.outputLength}</p>
+                    <p className="font-mono font-medium">{metrics.inputLength} / {metrics.outputLength}</p>
                   </div>
                   <div className="space-y-1">
                     <p className="text-muted-foreground text-xs">TTFT (ms)</p>
-                    <p className="font-mono font-medium">{row.metrics.ttft.toFixed(2)}</p>
+                    <p className="font-mono font-medium">{metrics.ttft.toFixed(2)}</p>
                   </div>
                   <div className="space-y-1">
                     <p className="text-muted-foreground text-xs">TPOT (ms)</p>
-                    <p className="font-mono font-medium">{row.metrics.tpot.toFixed(2)}</p>
+                    <p className="font-mono font-medium">{metrics.tpot.toFixed(2)}</p>
                   </div>
                   <div className="space-y-1">
                     <p className="text-muted-foreground text-xs">TPS (tokens/s)</p>
-                    <p className="font-mono font-medium">{row.metrics.tokensPerSecond.toFixed(2)}</p>
+                    <p className="font-mono font-medium">{metrics.tokensPerSecond.toFixed(2)}</p>
                   </div>
                 </div>
               ))}
