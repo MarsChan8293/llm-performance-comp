@@ -283,7 +283,7 @@ function App() {
       </div>
 
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {editingBenchmark ? '编辑基准测试' : '手动添加基准测试'}
@@ -301,7 +301,7 @@ function App() {
       </Dialog>
 
       <Dialog open={isCSVImportOpen} onOpenChange={setIsCSVImportOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>批量导入基准测试（CSV）</DialogTitle>
           </DialogHeader>
