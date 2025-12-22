@@ -30,3 +30,9 @@ packages
 pids
 .file-manifest
 .devcontainer/
+
+# Database
+server/*.db
+server/*.sqlite
+*.db
+*.sqlite
