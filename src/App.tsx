@@ -69,7 +69,7 @@ function App() {
   }
 
   const handleCSVImport = async (config: BenchmarkConfig, file: File) => {
-    await importBenchmarks(config, file)
+    await importBenchmarks({ config, file })
     setIsCSVImportOpen(false)
   }
 
@@ -280,7 +280,6 @@ function App() {
           </aside>
         </div>
       </div>
-
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -298,7 +297,6 @@ function App() {
           />
         </DialogContent>
       </Dialog>
-
       <Dialog open={isCSVImportOpen} onOpenChange={setIsCSVImportOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -311,7 +309,7 @@ function App() {
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }
 
 export default App
