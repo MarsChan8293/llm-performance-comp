@@ -14,6 +14,13 @@ const port = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
+// Serve static files from the React app
+const distPath = path.join(__dirname, '../dist');
+if (require('fs').existsSync(distPath)) {
+  app.use(express.static(distPath));
+  console.log(`Serving static files from ${distPath}`);
+}
+
 // Multer setup for file uploads
 const upload = multer({ storage: multer.memoryStorage() });
 

@@ -11,6 +11,7 @@ import { Message, MessageType } from '@/lib/types'
 import { ChatCircleText, Lightbulb, User, CalendarBlank, PaperPlaneTilt, Trash } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import { v4 as uuidv4 } from 'uuid'
 
 const FEEDBACK_TEMPLATE = `【问题现象】：
 【复现步骤】：
@@ -45,7 +46,7 @@ export function MessageBoard() {
     }
 
     const newMessage: Message = {
-      id: crypto.randomUUID(),
+      id: uuidv4(),
       type: activeType,
       content,
       author: author || '匿名用户',

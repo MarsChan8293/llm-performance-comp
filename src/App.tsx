@@ -15,6 +15,7 @@ import { MessageBoard } from '@/components/MessageBoard'
 import { Benchmark, BenchmarkConfig, BenchmarkMetricsEntry, ComparisonReport } from '@/lib/types'
 import { Plus, MagnifyingGlass, ArrowsLeftRight, ChartBar, FileArrowDown, FileText } from '@phosphor-icons/react'
 import { toast } from 'sonner'
+import { v4 as uuidv4 } from 'uuid'
 
 function App() {
   const { benchmarks, addBenchmark, deleteBenchmark, importBenchmarks, isLoading: isBenchmarksLoading } = useDbBenchmarks()
@@ -56,7 +57,7 @@ function App() {
       if (updated) toast.success('基准测试更新成功')
     } else {
       const newBenchmark: Benchmark = {
-        id: crypto.randomUUID(),
+        id: uuidv4(),
         config,
         metrics,
         createdAt: new Date().toISOString(),

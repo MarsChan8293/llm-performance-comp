@@ -19,6 +19,7 @@ import { CaretUp, CaretDown, FloppyDisk, FileText, Plus } from '@phosphor-icons/
 import { cn, parseGpuCount } from '@/lib/utils'
 import { useDbReports } from '@/hooks/use-db-reports'
 import { toast } from 'sonner'
+import { v4 as uuidv4 } from 'uuid'
 
 interface ComparisonPanelProps {
   benchmark1: Benchmark
@@ -61,7 +62,7 @@ export function ComparisonPanel({ benchmark1, benchmark2 }: ComparisonPanelProps
     }
 
     const report: ComparisonReport = {
-      id: overwrite && existingReport ? existingReport.id : crypto.randomUUID(),
+      id: overwrite && existingReport ? existingReport.id : uuidv4(),
       benchmarkId1: benchmark1.id,
       benchmarkId2: benchmark2.id,
       modelName1: benchmark1.config.modelName,
