@@ -106,7 +106,7 @@ export function CSVImportForm({ onSave, onCancel }: CSVImportFormProps) {
       <div className="space-y-3">
         <Label htmlFor="csv-upload">上传 CSV 文件 *</Label>
         <p className="text-sm text-muted-foreground">
-          需要包含列：Process Num, Input Length, Output Length, TTFT (ms), TPS (with prefill)，可选列：Total Time (ms)
+          支持多种CSV格式：Process Num/parallel, Input Length/input, Output Length/output, TTFT (ms)/Mean TTFT, TPS (with prefill)/output throughput, Total Time (ms)/duration (s) 等
         </p>
 
         <input
