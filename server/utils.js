@@ -75,6 +75,11 @@ function parseBenchmarkCSV(csvContent) {
     const tpsInfo = headerMapping.get(StandardField.TPS);
     const totalTimeInfo = headerMapping.get(StandardField.TOTAL_TIME);
     
+    // Safety check: ensure all required fields are present
+    if (!processNumInfo || !inputLengthInfo || !outputLengthInfo || !ttftInfo || !tpsInfo) {
+      throw new Error('Missing required field mapping');
+    }
+    
     const processNum = parseInt(record[processNumInfo.csvColumn]);
     const inputLength = parseInt(record[inputLengthInfo.csvColumn]);
     const outputLength = parseInt(record[outputLengthInfo.csvColumn]);

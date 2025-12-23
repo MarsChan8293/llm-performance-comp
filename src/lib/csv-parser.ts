@@ -41,12 +41,17 @@ export function parseCSV(csvText: string): BenchmarkMetricsEntry[] {
 
   return data.map((row) => {
     // Extract values using mapped headers
-    const processNumInfo = headerMapping.get(StandardField.PROCESS_NUM)!
-    const inputLengthInfo = headerMapping.get(StandardField.INPUT_LENGTH)!
-    const outputLengthInfo = headerMapping.get(StandardField.OUTPUT_LENGTH)!
-    const ttftInfo = headerMapping.get(StandardField.TTFT)!
-    const tpsInfo = headerMapping.get(StandardField.TPS)!
+    const processNumInfo = headerMapping.get(StandardField.PROCESS_NUM)
+    const inputLengthInfo = headerMapping.get(StandardField.INPUT_LENGTH)
+    const outputLengthInfo = headerMapping.get(StandardField.OUTPUT_LENGTH)
+    const ttftInfo = headerMapping.get(StandardField.TTFT)
+    const tpsInfo = headerMapping.get(StandardField.TPS)
     const totalTimeInfo = headerMapping.get(StandardField.TOTAL_TIME)
+    
+    // Safety check: ensure all required fields are present
+    if (!processNumInfo || !inputLengthInfo || !outputLengthInfo || !ttftInfo || !tpsInfo) {
+      throw new Error('Missing required field mapping')
+    }
     
     const processNum = row[processNumInfo.csvColumn]
     const inputLength = row[inputLengthInfo.csvColumn]
