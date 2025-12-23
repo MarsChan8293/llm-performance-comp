@@ -4,6 +4,7 @@ export interface BenchmarkConfig {
   shardingConfig: string
   chipName: string
   framework: string
+  frameworkVersion: string
   frameworkParams: string
   testDate: string
   submitter: string

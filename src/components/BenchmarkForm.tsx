@@ -19,6 +19,7 @@ export function BenchmarkForm({ benchmark, onSave, onCancel }: BenchmarkFormProp
       shardingConfig: '',
       chipName: '',
       framework: '',
+      frameworkVersion: '',
       frameworkParams: '',
       testDate: new Date().toISOString().split('T')[0],
       submitter: '',
@@ -131,13 +132,13 @@ export function BenchmarkForm({ benchmark, onSave, onCancel }: BenchmarkFormProp
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="testDate">测试日期 *</Label>
+            <Label htmlFor="frameworkVersion">推理框架版本号 *</Label>
             <Input
-              id="testDate"
-              type="date"
+              id="frameworkVersion"
               required
-              value={config.testDate}
-              onChange={(e) => setConfig({ ...config, testDate: e.target.value })}
+              value={config.frameworkVersion}
+              onChange={(e) => setConfig({ ...config, frameworkVersion: e.target.value })}
+              placeholder="例如：v0.6.3"
             />
           </div>
           <div className="space-y-2">
@@ -148,6 +149,16 @@ export function BenchmarkForm({ benchmark, onSave, onCancel }: BenchmarkFormProp
               value={config.submitter}
               onChange={(e) => setConfig({ ...config, submitter: e.target.value })}
               placeholder="例如：张三"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="testDate">测试日期 *</Label>
+            <Input
+              id="testDate"
+              type="date"
+              required
+              value={config.testDate}
+              onChange={(e) => setConfig({ ...config, testDate: e.target.value })}
             />
           </div>
         </div>

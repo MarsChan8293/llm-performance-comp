@@ -9,6 +9,7 @@ const configSchema = Joi.object({
   shardingConfig: Joi.string().required(),
   chipName: Joi.string().required(),
   framework: Joi.string().required(),
+  frameworkVersion: Joi.string().allow('').required(),
   frameworkParams: Joi.string().allow('').required(),
   testDate: Joi.string().isoDate().required(),
   submitter: Joi.string().allow('').optional(),

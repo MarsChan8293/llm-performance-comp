@@ -22,6 +22,7 @@ export function CSVImportForm({ onSave, onCancel }: CSVImportFormProps) {
     shardingConfig: '',
     chipName: '',
     framework: '',
+    frameworkVersion: '',
     submitter: '',
     operatorAcceleration: '',
     frameworkParams: '',
@@ -98,6 +99,7 @@ export function CSVImportForm({ onSave, onCancel }: CSVImportFormProps) {
     config.shardingConfig &&
     config.chipName &&
     config.framework &&
+    config.frameworkVersion &&
     config.submitter &&
     testDate
 
@@ -217,6 +219,16 @@ export function CSVImportForm({ onSave, onCancel }: CSVImportFormProps) {
               value={config.framework}
               onChange={(e) => setConfig({ ...config, framework: e.target.value })}
               placeholder="例如：vLLM, TensorRT-LLM"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="frameworkVersion">推理框架版本号 *</Label>
+            <Input
+              id="frameworkVersion"
+              required
+              value={config.frameworkVersion}
+              onChange={(e) => setConfig({ ...config, frameworkVersion: e.target.value })}
+              placeholder="例如：v0.6.3"
             />
           </div>
           <div className="space-y-2">

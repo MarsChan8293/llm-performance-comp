@@ -224,6 +224,11 @@ export function ComparisonPanel({ benchmark1, benchmark2 }: ComparisonPanelProps
             value2={benchmark2.config.framework} 
           />
           <ConfigRow 
+            label="推理框架版本号" 
+            value1={benchmark1.config.frameworkVersion} 
+            value2={benchmark2.config.frameworkVersion} 
+          />
+          <ConfigRow 
             label="切分参数" 
             value1={benchmark1.config.shardingConfig} 
             value2={benchmark2.config.shardingConfig} 
