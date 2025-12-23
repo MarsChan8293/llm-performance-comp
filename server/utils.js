@@ -139,10 +139,12 @@ function parseBenchmarkCSV(csvContent) {
  */
 function generateUniqueId(prefix) {
   const timestamp = Date.now().toString();
+  const crypto = require('crypto');
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const randomBytes = crypto.randomBytes(6);
   let randomPart = '';
   for (let i = 0; i < 6; i++) {
-    randomPart += characters.charAt(Math.floor(Math.random() * characters.length));
+    randomPart += characters.charAt(randomBytes[i] % characters.length);
   }
   return `${prefix}-${timestamp}-${randomPart}`;
 }

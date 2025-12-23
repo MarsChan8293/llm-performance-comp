@@ -199,22 +199,45 @@ app.post('/api/v1/benchmarks', (req, res) => {
   }
 
   const benchmarkId = id || uuidv4();
-  const benchmarkUniqueId = uniqueId || generateUniqueId('BM');
-  const queryText = `
-    /* Upsert benchmark: insert new or update config/metrics if ID exists */
-    INSERT INTO benchmarks(id, unique_id, config, metrics, created_at) 
-    VALUES(?, ?, ?, ?, ?) 
-    ON CONFLICT(id) DO UPDATE SET config=excluded.config, metrics=excluded.metrics
-  `;
-  const values = [benchmarkId, benchmarkUniqueId, JSON.stringify(config), JSON.stringify(metrics), createdAt || new Date().toISOString()];
+  
+  // Check if this is an update (id provided) and fetch existing unique_id
+  if (id) {
+    db.get('SELECT unique_id FROM benchmarks WHERE id = ?', [id], (err, row) => {
+      const benchmarkUniqueId = (row && row.unique_id) || uniqueId || generateUniqueId('BM');
+      const queryText = `
+        /* Upsert benchmark: insert new or update config/metrics if ID exists */
+        INSERT INTO benchmarks(id, unique_id, config, metrics, created_at) 
+        VALUES(?, ?, ?, ?, ?) 
+        ON CONFLICT(id) DO UPDATE SET config=excluded.config, metrics=excluded.metrics, unique_id=excluded.unique_id
+      `;
+      const values = [benchmarkId, benchmarkUniqueId, JSON.stringify(config), JSON.stringify(metrics), createdAt || new Date().toISOString()];
 
-  db.run(queryText, values, function(err) {
-    if (err) {
-      console.error(err.message);
-      return res.status(500).json({ error: 'Internal server error' });
-    }
-    res.status(201).json({ id: benchmarkId, uniqueId: benchmarkUniqueId, config, metrics, createdAt: values[4] });
-  });
+      db.run(queryText, values, function(err) {
+        if (err) {
+          console.error(err.message);
+          return res.status(500).json({ error: 'Internal server error' });
+        }
+        res.status(201).json({ id: benchmarkId, uniqueId: benchmarkUniqueId, config, metrics, createdAt: values[4] });
+      });
+    });
+  } else {
+    const benchmarkUniqueId = uniqueId || generateUniqueId('BM');
+    const queryText = `
+      /* Upsert benchmark: insert new or update config/metrics if ID exists */
+      INSERT INTO benchmarks(id, unique_id, config, metrics, created_at) 
+      VALUES(?, ?, ?, ?, ?) 
+      ON CONFLICT(id) DO UPDATE SET config=excluded.config, metrics=excluded.metrics, unique_id=excluded.unique_id
+    `;
+    const values = [benchmarkId, benchmarkUniqueId, JSON.stringify(config), JSON.stringify(metrics), createdAt || new Date().toISOString()];
+
+    db.run(queryText, values, function(err) {
+      if (err) {
+        console.error(err.message);
+        return res.status(500).json({ error: 'Internal server error' });
+      }
+      res.status(201).json({ id: benchmarkId, uniqueId: benchmarkUniqueId, config, metrics, createdAt: values[4] });
+    });
+  }
 });
 
 // Upload CSV and Config
@@ -314,33 +337,70 @@ app.post('/api/v1/reports', (req, res) => {
   const { id, uniqueId, benchmarkId1, benchmarkId2, modelName1, modelName2, summary, createdAt } = value;
   
   const reportId = id || uuidv4();
-  const reportUniqueId = uniqueId || generateUniqueId('RP');
   const reportCreatedAt = createdAt || new Date().toISOString();
   
-  const queryText = `
-    /* Upsert report: insert new or update summary if ID exists */
-    INSERT INTO reports(id, unique_id, benchmark_id1, benchmark_id2, model_name1, model_name2, summary, created_at) 
-    VALUES(?, ?, ?, ?, ?, ?, ?, ?)
-    ON CONFLICT(id) DO UPDATE SET 
-      summary=excluded.summary,
-      created_at=excluded.created_at
-  `;
-  const values = [reportId, reportUniqueId, benchmarkId1, benchmarkId2, modelName1, modelName2, summary, reportCreatedAt];
+  // Check if this is an update (id provided) and fetch existing unique_id
+  if (id) {
+    db.get('SELECT unique_id FROM reports WHERE id = ?', [id], (err, row) => {
+      const reportUniqueId = (row && row.unique_id) || uniqueId || generateUniqueId('RP');
+      const queryText = `
+        /* Upsert report: insert new or update summary if ID exists */
+        INSERT INTO reports(id, unique_id, benchmark_id1, benchmark_id2, model_name1, model_name2, summary, created_at) 
+        VALUES(?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(id) DO UPDATE SET 
+          summary=excluded.summary,
+          created_at=excluded.created_at,
+          unique_id=excluded.unique_id
+      `;
+      const values = [reportId, reportUniqueId, benchmarkId1, benchmarkId2, modelName1, modelName2, summary, reportCreatedAt];
 
-  db.run(queryText, values, function(err) {
-    if (err) {
-      console.error(err.message);
-      return res.status(500).json({ error: 'Internal server error' });
-    }
-    res.status(201).json({ 
-      id: reportId,
-      uniqueId: reportUniqueId,
-      benchmarkId1, 
-      benchmarkId2, 
-      modelName1, 
-      modelName2, 
-      summary, 
-      createdAt: reportCreatedAt 
+      db.run(queryText, values, function(err) {
+        if (err) {
+          console.error(err.message);
+          return res.status(500).json({ error: 'Internal server error' });
+        }
+        res.status(201).json({ 
+          id: reportId,
+          uniqueId: reportUniqueId,
+          benchmarkId1, 
+          benchmarkId2, 
+          modelName1, 
+          modelName2, 
+          summary, 
+          createdAt: reportCreatedAt 
+        });
+      });
+    });
+  } else {
+    const reportUniqueId = uniqueId || generateUniqueId('RP');
+    const queryText = `
+      /* Upsert report: insert new or update summary if ID exists */
+      INSERT INTO reports(id, unique_id, benchmark_id1, benchmark_id2, model_name1, model_name2, summary, created_at) 
+      VALUES(?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET 
+        summary=excluded.summary,
+        created_at=excluded.created_at,
+        unique_id=excluded.unique_id
+    `;
+    const values = [reportId, reportUniqueId, benchmarkId1, benchmarkId2, modelName1, modelName2, summary, reportCreatedAt];
+
+    db.run(queryText, values, function(err) {
+      if (err) {
+        console.error(err.message);
+        return res.status(500).json({ error: 'Internal server error' });
+      }
+      res.status(201).json({ 
+        id: reportId,
+        uniqueId: reportUniqueId,
+        benchmarkId1, 
+        benchmarkId2, 
+        modelName1, 
+        modelName2, 
+        summary, 
+        createdAt: reportCreatedAt 
+      });
+    });
+  }
     });
   });
 });
