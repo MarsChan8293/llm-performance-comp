@@ -16,6 +16,7 @@ import { Benchmark, BenchmarkConfig, BenchmarkMetricsEntry, ComparisonReport } f
 import { Plus, MagnifyingGlass, ArrowsLeftRight, ChartBar, FileArrowDown, FileText } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { v4 as uuidv4 } from 'uuid'
+import { generateUniqueId } from '@/lib/utils'
 
 function App() {
   const { benchmarks, addBenchmark, deleteBenchmark, importBenchmarks, isLoading: isBenchmarksLoading } = useDbBenchmarks()
@@ -57,7 +58,6 @@ function App() {
       const updated = await addBenchmark({ ...editingBenchmark, config, metrics })
       if (updated) toast.success('基准测试更新成功')
     } else {
-      const { generateUniqueId } = await import('@/lib/utils')
       const newBenchmark: Benchmark = {
         id: uuidv4(),
         uniqueId: generateUniqueId('BM'),

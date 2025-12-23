@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Benchmark, PerformanceMetrics, ComparisonReport } from '@/lib/types'
 import { CaretUp, CaretDown, FloppyDisk, FileText, Plus, Copy } from '@phosphor-icons/react'
-import { cn, parseGpuCount } from '@/lib/utils'
+import { cn, parseGpuCount, generateUniqueId } from '@/lib/utils'
 import { useDbReports } from '@/hooks/use-db-reports'
 import { toast } from 'sonner'
 import { v4 as uuidv4 } from 'uuid'
@@ -66,7 +66,6 @@ export function ComparisonPanel({ benchmark1, benchmark2 }: ComparisonPanelProps
       return
     }
 
-    const { generateUniqueId } = await import('@/lib/utils')
     const report: ComparisonReport = {
       id: overwrite && existingReport ? existingReport.id : uuidv4(),
       uniqueId: overwrite && existingReport ? existingReport.uniqueId : generateUniqueId('RP'),
