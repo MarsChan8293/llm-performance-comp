@@ -4,9 +4,10 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { ComparisonReport } from '@/lib/types'
-import { MagnifyingGlass, Trash, CalendarBlank, ArrowsLeftRight, FileText } from '@phosphor-icons/react'
+import { MagnifyingGlass, Trash, CalendarBlank, ArrowsLeftRight, FileText, Copy } from '@phosphor-icons/react'
 import { format } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
+import { toast } from 'sonner'
 
 interface ComparisonReportListProps {
   reports: ComparisonReport[]
@@ -27,11 +28,35 @@ export function ComparisonReportList({
     if (!searchQuery.trim()) return reports
     const query = searchQuery.toLowerCase()
     return reports.filter(r => 
+      r.uniqueId?.toLowerCase().includes(query) ||
       r.modelName1.toLowerCase().includes(query) ||
       r.modelName2.toLowerCase().includes(query) ||
       r.summary.toLowerCase().includes(query)
     )
   }, [reports, searchQuery])
+
+  const handleCopyUniqueId = async (e: React.MouseEvent, uniqueId: string) => {
+    e.stopPropagation()
+    try {
+      await navigator.clipboard.writeText(uniqueId)
+      toast.success('编号已复制')
+    } catch (err) {
+      // Fallback for browsers that don't support clipboard API
+      const textArea = document.createElement('textarea')
+      textArea.value = uniqueId
+      textArea.style.position = 'fixed'
+      textArea.style.left = '-999999px'
+      document.body.appendChild(textArea)
+      textArea.select()
+      try {
+        document.execCommand('copy')
+        toast.success('编号已复制')
+      } catch (e) {
+        toast.error('复制失败，请手动复制')
+      }
+      document.body.removeChild(textArea)
+    }
+  }
 
   if (isLoading) {
     return (
@@ -50,7 +75,7 @@ export function ComparisonReportList({
           className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
         />
         <Input
-          placeholder="搜索模型名称或总结内容..."
+          placeholder="搜索编号、模型名称或总结内容..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="pl-10"
@@ -82,6 +107,23 @@ export function ComparisonReportList({
                     <ArrowsLeftRight size={14} className="text-muted-foreground" />
                     <span className="truncate max-w-[150px] md:max-w-[250px]">{report.modelName2}</span>
                   </div>
+                  
+                  {report.uniqueId && (
+                    <div className="flex items-center gap-1">
+                      <code className="text-xs bg-muted px-2 py-1 rounded font-mono text-muted-foreground">
+                        {report.uniqueId}
+                      </code>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={(e) => handleCopyUniqueId(e, report.uniqueId)}
+                        className="h-6 w-6"
+                        title="复制编号"
+                      >
+                        <Copy size={14} />
+                      </Button>
+                    </div>
+                  )}
                   
                   <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
                     {report.summary}

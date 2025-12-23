@@ -16,8 +16,8 @@ import {
   AlertDialogTitle 
 } from '@/components/ui/alert-dialog'
 import { Benchmark, PerformanceMetrics, ComparisonReport } from '@/lib/types'
-import { CaretUp, CaretDown, FloppyDisk, FileText, Plus } from '@phosphor-icons/react'
-import { cn, parseGpuCount } from '@/lib/utils'
+import { CaretUp, CaretDown, FloppyDisk, FileText, Plus, Copy } from '@phosphor-icons/react'
+import { cn, parseGpuCount, generateUniqueId } from '@/lib/utils'
 import { useDbReports } from '@/hooks/use-db-reports'
 import { toast } from 'sonner'
 import { v4 as uuidv4 } from 'uuid'
@@ -35,6 +35,28 @@ export function ComparisonPanel({ benchmark1, benchmark2 }: ComparisonPanelProps
 
   const gpuCount1 = useMemo(() => parseGpuCount(benchmark1.config.shardingConfig), [benchmark1.config.shardingConfig])
   const gpuCount2 = useMemo(() => parseGpuCount(benchmark2.config.shardingConfig), [benchmark2.config.shardingConfig])
+
+  const handleCopyUniqueId = async (uniqueId: string) => {
+    try {
+      await navigator.clipboard.writeText(uniqueId)
+      toast.success('编号已复制')
+    } catch (err) {
+      // Fallback for browsers that don't support clipboard API
+      const textArea = document.createElement('textarea')
+      textArea.value = uniqueId
+      textArea.style.position = 'fixed'
+      textArea.style.left = '-999999px'
+      document.body.appendChild(textArea)
+      textArea.select()
+      try {
+        document.execCommand('copy')
+        toast.success('编号已复制')
+      } catch (e) {
+        toast.error('复制失败，请手动复制')
+      }
+      document.body.removeChild(textArea)
+    }
+  }
 
   // Check for existing report for this pair
   useEffect(() => {
@@ -64,6 +86,7 @@ export function ComparisonPanel({ benchmark1, benchmark2 }: ComparisonPanelProps
 
     const report: ComparisonReport = {
       id: overwrite && existingReport ? existingReport.id : uuidv4(),
+      uniqueId: overwrite && existingReport ? existingReport.uniqueId : generateUniqueId('RP'),
       benchmarkId1: benchmark1.id,
       benchmarkId2: benchmark2.id,
       modelName1: benchmark1.config.modelName,
@@ -201,6 +224,22 @@ export function ComparisonPanel({ benchmark1, benchmark2 }: ComparisonPanelProps
           <div className="space-y-1">
             <p className="text-sm font-bold text-blue-900">{benchmark1.config.modelName}</p>
             <p className="text-xs text-blue-700/70">{benchmark1.config.serverName}</p>
+            {benchmark1.uniqueId && (
+              <div className="flex items-center gap-1 mt-2">
+                <code className="text-xs bg-blue-100 px-2 py-1 rounded font-mono text-blue-800">
+                  {benchmark1.uniqueId}
+                </code>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => handleCopyUniqueId(benchmark1.uniqueId)}
+                  className="h-6 w-6 text-blue-700 hover:text-blue-900"
+                  title="复制编号"
+                >
+                  <Copy size={14} />
+                </Button>
+              </div>
+            )}
           </div>
         </Card>
         
@@ -216,6 +255,22 @@ export function ComparisonPanel({ benchmark1, benchmark2 }: ComparisonPanelProps
           <div className="space-y-1">
             <p className="text-sm font-bold text-purple-900">{benchmark2.config.modelName}</p>
             <p className="text-xs text-purple-700/70">{benchmark2.config.serverName}</p>
+            {benchmark2.uniqueId && (
+              <div className="flex items-center gap-1 mt-2">
+                <code className="text-xs bg-purple-100 px-2 py-1 rounded font-mono text-purple-800">
+                  {benchmark2.uniqueId}
+                </code>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => handleCopyUniqueId(benchmark2.uniqueId)}
+                  className="h-6 w-6 text-purple-700 hover:text-purple-900"
+                  title="复制编号"
+                >
+                  <Copy size={14} />
+                </Button>
+              </div>
+            )}
           </div>
         </Card>
       </div>

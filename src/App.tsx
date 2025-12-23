@@ -16,6 +16,7 @@ import { Benchmark, BenchmarkConfig, BenchmarkMetricsEntry, ComparisonReport } f
 import { Plus, MagnifyingGlass, ArrowsLeftRight, ChartBar, FileArrowDown, FileText } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { v4 as uuidv4 } from 'uuid'
+import { generateUniqueId } from '@/lib/utils'
 
 function App() {
   const { benchmarks, addBenchmark, deleteBenchmark, importBenchmarks, isLoading: isBenchmarksLoading } = useDbBenchmarks()
@@ -36,6 +37,7 @@ function App() {
     const query = searchQuery.toLowerCase()
     return allBenchmarks.filter(
       (b) =>
+        b.uniqueId?.toLowerCase().includes(query) ||
         b.config.modelName.toLowerCase().includes(query) ||
         b.config.serverName.toLowerCase().includes(query) ||
         b.config.chipName.toLowerCase().includes(query) ||
@@ -58,6 +60,7 @@ function App() {
     } else {
       const newBenchmark: Benchmark = {
         id: uuidv4(),
+        uniqueId: generateUniqueId('BM'),
         config,
         metrics,
         createdAt: new Date().toISOString(),
@@ -201,7 +204,7 @@ function App() {
                     className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
                   />
                   <Input
-                    placeholder="搜索模型、服务器、芯片、框架..."
+                    placeholder="搜索编号、模型、服务器、芯片、框架..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-10"

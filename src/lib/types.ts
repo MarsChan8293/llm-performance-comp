@@ -26,6 +26,7 @@ export type BenchmarkMetricsEntry = PerformanceMetrics
 
 export interface Benchmark {
   id: string
+  uniqueId: string
   config: BenchmarkConfig
   metrics: BenchmarkMetricsEntry[]
   createdAt: string
@@ -33,6 +34,7 @@ export interface Benchmark {
 
 export interface ComparisonReport {
   id: string
+  uniqueId: string
   benchmarkId1: string
   benchmarkId2: string
   modelName1: string

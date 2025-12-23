@@ -30,6 +30,7 @@ const metricsSchema = Joi.object({
 // Joi Schema for Comparison Reports
 const reportSchema = Joi.object({
   id: Joi.string().optional(),
+  uniqueId: Joi.string().optional(),
   benchmarkId1: Joi.string().required(),
   benchmarkId2: Joi.string().required(),
   modelName1: Joi.string().required(),
@@ -131,9 +132,36 @@ function parseBenchmarkCSV(csvContent) {
   });
 }
 
+/**
+ * Generates a unique ID with format: PREFIX-TIMESTAMP-RANDOM6
+ * @param {string} prefix - "BM" for benchmarks, "RP" for reports
+ * @returns {string} Unique ID
+ */
+function generateUniqueId(prefix) {
+  // Generate human-readable timestamp in format YYYYMMDDHHmmss
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const seconds = String(now.getSeconds()).padStart(2, '0');
+  const timestamp = `${year}${month}${day}${hours}${minutes}${seconds}`;
+  
+  const crypto = require('crypto');
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const randomBytes = crypto.randomBytes(6);
+  let randomPart = '';
+  for (let i = 0; i < 6; i++) {
+    randomPart += characters.charAt(randomBytes[i] % characters.length);
+  }
+  return `${prefix}-${timestamp}-${randomPart}`;
+}
+
 module.exports = {
   configSchema,
   metricsSchema,
   reportSchema,
   parseBenchmarkCSV,
+  generateUniqueId,
 };

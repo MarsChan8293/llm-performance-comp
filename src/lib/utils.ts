@@ -45,3 +45,29 @@ export function parseGpuCount(shardingConfig: string): number {
 
   return 1
 }
+
+/**
+ * Generates a unique ID with format: PREFIX-TIMESTAMP-RANDOM6
+ * @param prefix - "BM" for benchmarks, "RP" for reports
+ * @returns Unique ID
+ */
+export function generateUniqueId(prefix: 'BM' | 'RP'): string {
+  // Generate human-readable timestamp in format YYYYMMDDHHmmss
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  const hours = String(now.getHours()).padStart(2, '0')
+  const minutes = String(now.getMinutes()).padStart(2, '0')
+  const seconds = String(now.getSeconds()).padStart(2, '0')
+  const timestamp = `${year}${month}${day}${hours}${minutes}${seconds}`
+  
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+  const randomValues = new Uint8Array(6)
+  crypto.getRandomValues(randomValues)
+  let randomPart = ''
+  for (let i = 0; i < 6; i++) {
+    randomPart += characters.charAt(randomValues[i] % characters.length)
+  }
+  return `${prefix}-${timestamp}-${randomPart}`
+}
