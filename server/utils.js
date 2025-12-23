@@ -1,5 +1,6 @@
 const { parse } = require('csv-parse/sync');
 const Joi = require('joi');
+const { mapHeaders, validateRequiredFields, StandardField } = require('./csv-header-mapper');
 
 // Joi Schema for BenchmarkConfig (matching src/lib/types.ts)
 const configSchema = Joi.object({
@@ -38,6 +39,7 @@ const reportSchema = Joi.object({
 
 /**
  * Parses CSV content and returns an array of PerformanceMetrics
+ * Supports multiple CSV formats with fuzzy header matching and unit conversion
  * @param {string} csvContent 
  * @returns {Array}
  */
@@ -48,13 +50,58 @@ function parseBenchmarkCSV(csvContent) {
     trim: true,
   });
 
+  if (records.length === 0) {
+    throw new Error('CSV file contains no valid data rows');
+  }
+
+  // Get headers from the first record
+  const csvHeaders = Object.keys(records[0]);
+  
+  // Map headers to standard fields with fuzzy matching
+  const headerMapping = mapHeaders(csvHeaders);
+  
+  // Validate that all required fields are present
+  const missingFields = validateRequiredFields(headerMapping);
+  if (missingFields.length > 0) {
+    throw new Error(`CSV file is missing required columns: ${missingFields.join(', ')}`);
+  }
+
   return records.map((record) => {
-    const processNum = parseInt(record['Process Num']);
-    const inputLength = parseInt(record['Input Length']);
-    const outputLength = parseInt(record['Output Length']);
-    const ttft = parseFloat(record['TTFT (ms)']);
-    const tokensPerSecond = parseFloat(record['TPS (with prefill)']);
-    const totalTime = record['Total Time (ms)'] ? parseFloat(record['Total Time (ms)']) : 0;
+    // Extract values using mapped headers
+    const processNumInfo = headerMapping.get(StandardField.PROCESS_NUM);
+    const inputLengthInfo = headerMapping.get(StandardField.INPUT_LENGTH);
+    const outputLengthInfo = headerMapping.get(StandardField.OUTPUT_LENGTH);
+    const ttftInfo = headerMapping.get(StandardField.TTFT);
+    const tpsInfo = headerMapping.get(StandardField.TPS);
+    const totalTimeInfo = headerMapping.get(StandardField.TOTAL_TIME);
+    
+    // Safety check: ensure all required fields are present
+    if (!processNumInfo || !inputLengthInfo || !outputLengthInfo || !ttftInfo || !tpsInfo) {
+      throw new Error('Missing required field mapping');
+    }
+    
+    const processNum = parseInt(record[processNumInfo.csvColumn]);
+    const inputLength = parseInt(record[inputLengthInfo.csvColumn]);
+    const outputLength = parseInt(record[outputLengthInfo.csvColumn]);
+    let ttft = parseFloat(record[ttftInfo.csvColumn]);
+    const tokensPerSecond = parseFloat(record[tpsInfo.csvColumn]);
+    let totalTime = 0;
+    
+    // Apply unit conversion for TTFT if needed
+    if (ttftInfo.conversionFactor !== 1) {
+      ttft = ttft * ttftInfo.conversionFactor;
+    }
+    
+    // Get total time with unit conversion if available
+    if (totalTimeInfo) {
+      const totalTimeValue = record[totalTimeInfo.csvColumn];
+      if (totalTimeValue) {
+        totalTime = parseFloat(totalTimeValue);
+        if (totalTimeInfo.conversionFactor !== 1) {
+          totalTime = totalTime * totalTimeInfo.conversionFactor;
+        }
+      }
+    }
 
     if (isNaN(processNum) || isNaN(inputLength) || isNaN(outputLength) || isNaN(ttft) || isNaN(tokensPerSecond)) {
       throw new Error('CSV contains invalid numeric data');
