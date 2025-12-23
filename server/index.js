@@ -4,7 +4,7 @@ const cors = require('cors');
 const path = require('path');
 const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
-const { configSchema, metricsSchema, messageSchema, reportSchema, parseBenchmarkCSV } = require('./utils');
+const { configSchema, metricsSchema, reportSchema, parseBenchmarkCSV } = require('./utils');
 require('dotenv').config();
 
 const app = express();
@@ -45,26 +45,11 @@ const initDb = () => {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
   `;
-  
-  const messageQuery = `
-    CREATE TABLE IF NOT EXISTS messages (
-      id TEXT PRIMARY KEY,
-      type TEXT NOT NULL,
-      content TEXT NOT NULL,
-      author TEXT NOT NULL,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    );
-  `;
 
   db.serialize(() => {
     db.run(benchmarkQuery, (err) => {
       if (err) console.error('Error initializing benchmarks table:', err.message);
       else console.log('Benchmarks table initialized');
-    });
-    
-    db.run(messageQuery, (err) => {
-      if (err) console.error('Error initializing messages table:', err.message);
-      else console.log('Messages table initialized');
     });
 
     const reportQuery = `
@@ -285,63 +270,6 @@ app.post('/api/v1/reports', (req, res) => {
 app.delete('/api/v1/reports/:id', (req, res) => {
   const { id } = req.params;
   db.run('DELETE FROM reports WHERE id = ?', id, function(err) {
-    if (err) {
-      console.error(err.message);
-      return res.status(500).json({ error: 'Internal server error' });
-    }
-    res.status(204).send();
-  });
-});
-
-// --- Message Board Routes ---
-
-// Get all messages
-app.get('/api/v1/messages', (req, res) => {
-  db.all('SELECT * FROM messages ORDER BY created_at DESC', [], (err, rows) => {
-    if (err) {
-      console.error(err.message);
-      return res.status(500).json({ error: 'Internal server error' });
-    }
-    const messages = rows.map(row => ({
-      id: row.id,
-      type: row.type,
-      content: row.content,
-      author: row.author,
-      createdAt: row.created_at
-    }));
-    res.json(messages);
-  });
-});
-
-// Add a new message
-app.post('/api/v1/messages', (req, res) => {
-  const { error, value } = messageSchema.validate(req.body);
-  if (error) return res.status(400).json({ error: error.details[0].message });
-
-  const { id, type, content, author, createdAt } = value;
-  
-  const queryText = 'INSERT INTO messages(id, type, content, author, created_at) VALUES(?, ?, ?, ?, ?)';
-  const values = [id || uuidv4(), type, content, author || '匿名用户', createdAt || new Date().toISOString()];
-
-  db.run(queryText, values, function(err) {
-    if (err) {
-      console.error(err.message);
-      return res.status(500).json({ error: 'Internal server error' });
-    }
-    res.status(201).json({ 
-      id: values[0], 
-      type, 
-      content, 
-      author: values[3], 
-      createdAt: values[4] 
-    });
-  });
-});
-
-// Delete a message
-app.delete('/api/v1/messages/:id', (req, res) => {
-  const { id } = req.params;
-  db.run('DELETE FROM messages WHERE id = ?', id, function(err) {
     if (err) {
       console.error(err.message);
       return res.status(500).json({ error: 'Internal server error' });

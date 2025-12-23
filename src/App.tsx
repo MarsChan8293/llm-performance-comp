@@ -11,7 +11,7 @@ import { CSVImportForm } from '@/components/CSVImportForm'
 import { BenchmarkCard } from '@/components/BenchmarkCard'
 import { ComparisonPanel } from '@/components/ComparisonPanel'
 import { ComparisonReportList } from '@/components/ComparisonReportList'
-import { MessageBoard } from '@/components/MessageBoard'
+
 import { Benchmark, BenchmarkConfig, BenchmarkMetricsEntry, ComparisonReport } from '@/lib/types'
 import { Plus, MagnifyingGlass, ArrowsLeftRight, ChartBar, FileArrowDown, FileText } from '@phosphor-icons/react'
 import { toast } from 'sonner'
@@ -136,9 +136,8 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
-      <div className="container mx-auto px-4 py-6 max-w-[1600px]">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          <div className="lg:col-span-8 xl:col-span-9">
+      <div className="container mx-auto px-4 py-6 max-w-7xl">
+        <div className="w-full">
             <header className="mb-8">
               <div className="flex items-center gap-3 mb-2">
                 <ChartBar size={40} weight="duotone" className="text-primary" />
@@ -272,13 +271,6 @@ function App() {
                 />
               </TabsContent>
             </Tabs>
-          </div>
-
-          <aside className="lg:col-span-4 xl:col-span-3">
-            <div className="sticky top-6">
-              <MessageBoard />
-            </div>
-          </aside>
         </div>
       </div>
 
