@@ -92,6 +92,10 @@ export function BenchmarkCard({
               <span className="font-medium">{benchmark.config.framework}</span>
             </div>
             <div className="flex items-center gap-2">
+              <span className="text-muted-foreground">推理框架版本号</span>
+              <span className="font-medium">{benchmark.config.frameworkVersion}</span>
+            </div>
+            <div className="flex items-center gap-2">
               <span className="text-muted-foreground">测试日期</span>
               <span className="font-medium">{benchmark.config.testDate}</span>
             </div>
