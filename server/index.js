@@ -401,8 +401,6 @@ app.post('/api/v1/reports', (req, res) => {
       });
     });
   }
-    });
-  });
 });
 
 // Delete a report
