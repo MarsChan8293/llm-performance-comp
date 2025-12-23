@@ -156,7 +156,10 @@ export function ComparisonPanel({ benchmark1, benchmark2 }: ComparisonPanelProps
   }
 
   const ConfigRow = ({ label, value1, value2 }: { label: string; value1: string; value2: string }) => {
-    const isDifferent = value1 !== value2
+    // Normalize empty values for comparison
+    const normalizedValue1 = value1?.trim() || ''
+    const normalizedValue2 = value2?.trim() || ''
+    const isDifferent = normalizedValue1 !== normalizedValue2
     
     return (
       <div className={cn(
