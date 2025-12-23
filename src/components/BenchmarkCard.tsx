@@ -22,10 +22,27 @@ export function BenchmarkCard({
   onEdit,
   onDelete,
 }: BenchmarkCardProps) {
-  const handleCopyUniqueId = () => {
+  const handleCopyUniqueId = async () => {
     if (benchmark.uniqueId) {
-      navigator.clipboard.writeText(benchmark.uniqueId)
-      toast.success('编号已复制')
+      try {
+        await navigator.clipboard.writeText(benchmark.uniqueId)
+        toast.success('编号已复制')
+      } catch (err) {
+        // Fallback for browsers that don't support clipboard API
+        const textArea = document.createElement('textarea')
+        textArea.value = benchmark.uniqueId
+        textArea.style.position = 'fixed'
+        textArea.style.left = '-999999px'
+        document.body.appendChild(textArea)
+        textArea.select()
+        try {
+          document.execCommand('copy')
+          toast.success('编号已复制')
+        } catch (e) {
+          toast.error('复制失败，请手动复制')
+        }
+        document.body.removeChild(textArea)
+      }
     }
   }
 

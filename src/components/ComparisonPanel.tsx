@@ -35,9 +35,26 @@ export function ComparisonPanel({ benchmark1, benchmark2 }: ComparisonPanelProps
   const gpuCount1 = useMemo(() => parseGpuCount(benchmark1.config.shardingConfig), [benchmark1.config.shardingConfig])
   const gpuCount2 = useMemo(() => parseGpuCount(benchmark2.config.shardingConfig), [benchmark2.config.shardingConfig])
 
-  const handleCopyUniqueId = (uniqueId: string) => {
-    navigator.clipboard.writeText(uniqueId)
-    toast.success('编号已复制')
+  const handleCopyUniqueId = async (uniqueId: string) => {
+    try {
+      await navigator.clipboard.writeText(uniqueId)
+      toast.success('编号已复制')
+    } catch (err) {
+      // Fallback for browsers that don't support clipboard API
+      const textArea = document.createElement('textarea')
+      textArea.value = uniqueId
+      textArea.style.position = 'fixed'
+      textArea.style.left = '-999999px'
+      document.body.appendChild(textArea)
+      textArea.select()
+      try {
+        document.execCommand('copy')
+        toast.success('编号已复制')
+      } catch (e) {
+        toast.error('复制失败，请手动复制')
+      }
+      document.body.removeChild(textArea)
+    }
   }
 
   // Check for existing report for this pair
