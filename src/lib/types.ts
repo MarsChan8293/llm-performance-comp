@@ -30,16 +30,6 @@ export interface Benchmark {
   createdAt: string
 }
 
-export type MessageType = 'feedback' | 'feature_request'
-
-export interface Message {
-  id: string
-  type: MessageType
-  content: string
-  author: string
-  createdAt: string
-}
-
 export interface ComparisonReport {
   id: string
   benchmarkId1: string
