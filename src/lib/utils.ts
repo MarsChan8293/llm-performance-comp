@@ -52,7 +52,16 @@ export function parseGpuCount(shardingConfig: string): number {
  * @returns Unique ID
  */
 export function generateUniqueId(prefix: 'BM' | 'RP'): string {
-  const timestamp = Date.now().toString()
+  // Generate human-readable timestamp in format YYYYMMDDHHmmss
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  const hours = String(now.getHours()).padStart(2, '0')
+  const minutes = String(now.getMinutes()).padStart(2, '0')
+  const seconds = String(now.getSeconds()).padStart(2, '0')
+  const timestamp = `${year}${month}${day}${hours}${minutes}${seconds}`
+  
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
   const randomValues = new Uint8Array(6)
   crypto.getRandomValues(randomValues)
