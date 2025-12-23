@@ -12,6 +12,10 @@ import { parseCSV } from '@/lib/csv-parser'
 import { BenchmarkMetricsEntry, BenchmarkConfig } from '@/lib/types'
 import { UploadSimple, X, CheckCircle, Info } from '@phosphor-icons/react'
 
+const CSV_PLACEHOLDER_EXAMPLE = `parallel,input,output,total input Tokens,total output Tokens,duration (s),,output throughput (tok/s),,Mean TTFT (ms),,Mean TPOT (ms),,Mean ITL (ms)
+16,256,1024,4096,16384,56.2584375590086,,291.22742669159766,,417.7063327806536,,54.57922939602254,,54.5259199566317
+16,256,4096,4096,65536,240.95772743597627,,271.9813167951348,,419.53694124822505,,58.73777987707665,,58.72343752662346`
+
 interface CSVImportFormProps {
   onSave: (config: BenchmarkConfig, file: File) => void
   onCancel: () => void
@@ -112,7 +116,8 @@ export function CSVImportForm({ onSave, onCancel }: CSVImportFormProps) {
     // For text import, create a File object from the text
     if (importMethod === 'text' && csvText) {
       const blob = new Blob([csvText], { type: 'text/csv' })
-      const file = new File([blob], 'pasted-data.csv', { type: 'text/csv' })
+      const timestamp = new Date().toISOString().split('T')[0]
+      const file = new File([blob], `pasted-csv-${timestamp}.csv`, { type: 'text/csv' })
       onSave(
         {
           ...config,
@@ -200,9 +205,7 @@ export function CSVImportForm({ onSave, onCancel }: CSVImportFormProps) {
             </p>
             <div className="space-y-2">
               <Textarea
-                placeholder="parallel,input,output,total input Tokens,total output Tokens,duration (s),,output throughput (tok/s),,Mean TTFT (ms),,Mean TPOT (ms),,Mean ITL (ms)
-16,256,1024,4096,16384,56.2584375590086,,291.22742669159766,,417.7063327806536,,54.57922939602254,,54.5259199566317
-16,256,4096,4096,65536,240.95772743597627,,271.9813167951348,,419.53694124822505,,58.73777987707665,,58.72343752662346"
+                placeholder={CSV_PLACEHOLDER_EXAMPLE}
                 value={csvText}
                 onChange={handleTextChange}
                 className="min-h-[200px] font-mono text-sm"
