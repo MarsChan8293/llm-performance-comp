@@ -109,6 +109,22 @@ export function CSVImportForm({ onSave, onCancel }: CSVImportFormProps) {
     setError('')
   }
 
+  const handleTabChange = (value: string) => {
+    setImportMethod(value as 'file' | 'text')
+    // Clear state when switching tabs
+    setParsedMetrics([])
+    setError('')
+    if (value === 'file') {
+      setCsvText('')
+    } else {
+      setSelectedFile(null)
+      setFileName('')
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+    }
+  }
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!isFormValid) return
@@ -152,7 +168,7 @@ export function CSVImportForm({ onSave, onCancel }: CSVImportFormProps) {
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-3">
         <Label>导入方式 *</Label>
-        <Tabs value={importMethod} onValueChange={(v) => setImportMethod(v as 'file' | 'text')}>
+        <Tabs value={importMethod} onValueChange={handleTabChange}>
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="file">上传文件</TabsTrigger>
             <TabsTrigger value="text">粘贴文本</TabsTrigger>
