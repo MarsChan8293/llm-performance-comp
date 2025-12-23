@@ -6,9 +6,15 @@ import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { Textarea } from '@/components/ui/textarea'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { parseCSV } from '@/lib/csv-parser'
 import { BenchmarkMetricsEntry, BenchmarkConfig } from '@/lib/types'
 import { UploadSimple, X, CheckCircle, Info } from '@phosphor-icons/react'
+
+const CSV_PLACEHOLDER_EXAMPLE = `parallel,input,output,total input Tokens,total output Tokens,duration (s),,output throughput (tok/s),,Mean TTFT (ms),,Mean TPOT (ms),,Mean ITL (ms)
+16,256,1024,4096,16384,56.2584375590086,,291.22742669159766,,417.7063327806536,,54.57922939602254,,54.5259199566317
+16,256,4096,4096,65536,240.95772743597627,,271.9813167951348,,419.53694124822505,,58.73777987707665,,58.72343752662346`
 
 interface CSVImportFormProps {
   onSave: (config: BenchmarkConfig, file: File) => void
@@ -32,6 +38,8 @@ export function CSVImportForm({ onSave, onCancel }: CSVImportFormProps) {
   const [parsedMetrics, setParsedMetrics] = useState<BenchmarkMetricsEntry[]>([])
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [fileName, setFileName] = useState('')
+  const [csvText, setCsvText] = useState('')
+  const [importMethod, setImportMethod] = useState<'file' | 'text'>('file')
   const [error, setError] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -78,17 +86,70 @@ export function CSVImportForm({ onSave, onCancel }: CSVImportFormProps) {
     }
   }
 
+  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const text = e.target.value
+    setCsvText(text)
+    setError('')
+    setParsedMetrics([])
+
+    if (!text.trim()) return
+
+    try {
+      const metrics = parseCSV(text)
+      setParsedMetrics(metrics)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '解析 CSV 内容时发生错误')
+      setParsedMetrics([])
+    }
+  }
+
+  const handleClearText = () => {
+    setCsvText('')
+    setParsedMetrics([])
+    setError('')
+  }
+
+  const handleTabChange = (value: string) => {
+    setImportMethod(value as 'file' | 'text')
+    // Clear state when switching tabs
+    setParsedMetrics([])
+    setError('')
+    if (value === 'file') {
+      setCsvText('')
+    } else {
+      setSelectedFile(null)
+      setFileName('')
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+    }
+  }
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!isFormValid || !selectedFile) return
+    if (!isFormValid) return
 
-    onSave(
-      {
-        ...config,
-        testDate,
-      },
-      selectedFile
-    )
+    // For text import, create a File object from the text
+    if (importMethod === 'text' && csvText) {
+      const blob = new Blob([csvText], { type: 'text/csv' })
+      const timestamp = new Date().toISOString().split('T')[0]
+      const file = new File([blob], `pasted-csv-${timestamp}.csv`, { type: 'text/csv' })
+      onSave(
+        {
+          ...config,
+          testDate,
+        },
+        file
+      )
+    } else if (importMethod === 'file' && selectedFile) {
+      onSave(
+        {
+          ...config,
+          testDate,
+        },
+        selectedFile
+      )
+    }
   }
 
 
@@ -106,45 +167,78 @@ export function CSVImportForm({ onSave, onCancel }: CSVImportFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-3">
-        <Label htmlFor="csv-upload">上传 CSV 文件 *</Label>
-        <p className="text-sm text-muted-foreground">
-          支持多种CSV格式：Process Num/parallel, Input Length/input, Output Length/output, TTFT (ms)/Mean TTFT, TPS (with prefill)/output throughput, Total Time (ms)/duration (s) 等
-        </p>
+        <Label>导入方式 *</Label>
+        <Tabs value={importMethod} onValueChange={handleTabChange}>
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="file">上传文件</TabsTrigger>
+            <TabsTrigger value="text">粘贴文本</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="file" className="space-y-3 mt-4">
+            <p className="text-sm text-muted-foreground">
+              支持多种CSV格式：Process Num/parallel, Input Length/input, Output Length/output, TTFT (ms)/Mean TTFT, TPS (with prefill)/output throughput, Total Time (ms)/duration (s) 等
+            </p>
 
-        <input
-          ref={fileInputRef}
-          type="file"
-          id="csv-upload"
-          accept=".csv"
-          onChange={handleFileChange}
-          className="hidden"
-        />
+            <input
+              ref={fileInputRef}
+              type="file"
+              id="csv-upload"
+              accept=".csv"
+              onChange={handleFileChange}
+              className="hidden"
+            />
 
-        <Button
-          type="button"
-          variant="outline"
-          className="w-full h-32 border-2 border-dashed hover:border-primary hover:bg-accent/50 transition-colors"
-          onClick={() => fileInputRef.current?.click()}
-        >
-          <div className="flex flex-col items-center gap-2">
-            <UploadSimple size={32} className="text-muted-foreground" />
-            <div className="text-center">
-              <p className="font-medium">点击上传 CSV 文件</p>
-              <p className="text-sm text-muted-foreground">支持 .csv 格式</p>
-            </div>
-          </div>
-        </Button>
-
-        {fileName && (
-          <div className="flex items-center gap-3 text-sm bg-muted/60 px-3 py-2 rounded-md">
-            <CheckCircle size={16} className="text-green-600" />
-            <span className="font-medium truncate">{fileName}</span>
-            <Badge variant="secondary">{parsedMetrics.length} 条记录</Badge>
-            <Button variant="ghost" size="icon" className="ml-auto h-8 w-8" onClick={handleRemoveFile}>
-              <X size={16} />
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full h-32 border-2 border-dashed hover:border-primary hover:bg-accent/50 transition-colors"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <div className="flex flex-col items-center gap-2">
+                <UploadSimple size={32} className="text-muted-foreground" />
+                <div className="text-center">
+                  <p className="font-medium">点击上传 CSV 文件</p>
+                  <p className="text-sm text-muted-foreground">支持 .csv 格式</p>
+                </div>
+              </div>
             </Button>
-          </div>
-        )}
+
+            {fileName && (
+              <div className="flex items-center gap-3 text-sm bg-muted/60 px-3 py-2 rounded-md">
+                <CheckCircle size={16} className="text-green-600" />
+                <span className="font-medium truncate">{fileName}</span>
+                <Badge variant="secondary">{parsedMetrics.length} 条记录</Badge>
+                <Button variant="ghost" size="icon" className="ml-auto h-8 w-8" onClick={handleRemoveFile}>
+                  <X size={16} />
+                </Button>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="text" className="space-y-3 mt-4">
+            <p className="text-sm text-muted-foreground">
+              将CSV格式数据直接粘贴到下方文本框中，支持与文件导入相同的格式
+            </p>
+            <div className="space-y-2">
+              <Textarea
+                placeholder={CSV_PLACEHOLDER_EXAMPLE}
+                value={csvText}
+                onChange={handleTextChange}
+                className="min-h-[200px] font-mono text-sm"
+              />
+              {csvText && (
+                <div className="flex items-center gap-3 text-sm bg-muted/60 px-3 py-2 rounded-md">
+                  <CheckCircle size={16} className="text-green-600" />
+                  <span className="font-medium">已输入 CSV 数据</span>
+                  <Badge variant="secondary">{parsedMetrics.length} 条记录</Badge>
+                  <Button variant="ghost" size="icon" className="ml-auto h-8 w-8" onClick={handleClearText}>
+                    <X size={16} />
+                  </Button>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
 
         {error && (
           <Alert variant="destructive">
