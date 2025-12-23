@@ -12,7 +12,7 @@ const configSchema = Joi.object({
   frameworkVersion: Joi.string().allow('').required(),
   frameworkParams: Joi.string().allow('').required(),
   testDate: Joi.string().isoDate().required(),
-  submitter: Joi.string().allow('').optional(),
+  submitter: Joi.string().allow('').required(),
   operatorAcceleration: Joi.string().allow('').optional(),
   notes: Joi.string().allow('').optional(),
 });

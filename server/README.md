@@ -18,6 +18,8 @@ This is a simple Express server to persist benchmark data in a SQLite database.
     npm run server
     ```
 
+> **Note**: After updating the codebase (e.g., pulling changes or merging PRs), ensure you restart the server to load the latest schema and validation rules. If you encounter validation errors like `"field_name" is not allowed`, it may indicate that the server is running outdated code.
+
 ## API Endpoints (v1)
 
 All endpoints are prefixed with \`/api/v1\`.
