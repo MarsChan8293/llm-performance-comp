@@ -18,7 +18,9 @@ This is a simple Express server to persist benchmark data in a SQLite database.
     npm run server
     ```
 
-> **Note**: After updating the codebase (e.g., pulling changes or merging PRs), ensure you restart the server to load the latest schema and validation rules. If you encounter validation errors like `"field_name" is not allowed`, it may indicate that the server is running outdated code.
+> **Important**: After updating the codebase (e.g., pulling changes, merging PRs, or switching branches), **always restart the server** to load the latest schema and validation rules. 
+> 
+> Common symptom of running outdated server code: validation errors like `"field_name" is not allowed` for fields that exist in the current schema. This indicates the server is using a cached or older version of the validation schema.
 
 ## API Endpoints (v1)
 
