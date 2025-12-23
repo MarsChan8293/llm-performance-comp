@@ -4,7 +4,7 @@ const cors = require('cors');
 const path = require('path');
 const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
-const { configSchema, metricsSchema, reportSchema, parseBenchmarkCSV } = require('./utils');
+const { configSchema, metricsSchema, reportSchema, parseBenchmarkCSV, generateUniqueId } = require('./utils');
 require('dotenv').config();
 
 const app = express();
@@ -40,6 +40,7 @@ const initDb = () => {
   const benchmarkQuery = `
     CREATE TABLE IF NOT EXISTS benchmarks (
       id TEXT PRIMARY KEY,
+      unique_id TEXT UNIQUE,
       config TEXT NOT NULL,
       metrics TEXT NOT NULL,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -52,9 +53,34 @@ const initDb = () => {
       else console.log('Benchmarks table initialized');
     });
 
+    // Add unique_id column if it doesn't exist (migration)
+    db.run(`
+      ALTER TABLE benchmarks ADD COLUMN unique_id TEXT;
+    `, (err) => {
+      if (err && !err.message.includes('duplicate column')) {
+        console.error('Error adding unique_id column to benchmarks:', err.message);
+      } else {
+        // Generate unique IDs for existing records
+        db.all('SELECT id FROM benchmarks WHERE unique_id IS NULL', [], (err, rows) => {
+          if (err) {
+            console.error('Error selecting benchmarks without unique_id:', err.message);
+          } else if (rows && rows.length > 0) {
+            console.log(`Generating unique IDs for ${rows.length} existing benchmarks...`);
+            rows.forEach(row => {
+              const uniqueId = generateUniqueId('BM');
+              db.run('UPDATE benchmarks SET unique_id = ? WHERE id = ?', [uniqueId, row.id], (err) => {
+                if (err) console.error('Error updating benchmark unique_id:', err.message);
+              });
+            });
+          }
+        });
+      }
+    });
+
     const reportQuery = `
       CREATE TABLE IF NOT EXISTS reports (
         id TEXT PRIMARY KEY,
+        unique_id TEXT UNIQUE,
         benchmark_id1 TEXT NOT NULL,
         benchmark_id2 TEXT NOT NULL,
         model_name1 TEXT NOT NULL,
@@ -66,6 +92,30 @@ const initDb = () => {
     db.run(reportQuery, (err) => {
       if (err) console.error('Error initializing reports table:', err.message);
       else console.log('Reports table initialized');
+    });
+
+    // Add unique_id column to reports if it doesn't exist (migration)
+    db.run(`
+      ALTER TABLE reports ADD COLUMN unique_id TEXT;
+    `, (err) => {
+      if (err && !err.message.includes('duplicate column')) {
+        console.error('Error adding unique_id column to reports:', err.message);
+      } else {
+        // Generate unique IDs for existing records
+        db.all('SELECT id FROM reports WHERE unique_id IS NULL', [], (err, rows) => {
+          if (err) {
+            console.error('Error selecting reports without unique_id:', err.message);
+          } else if (rows && rows.length > 0) {
+            console.log(`Generating unique IDs for ${rows.length} existing reports...`);
+            rows.forEach(row => {
+              const uniqueId = generateUniqueId('RP');
+              db.run('UPDATE reports SET unique_id = ? WHERE id = ?', [uniqueId, row.id], (err) => {
+                if (err) console.error('Error updating report unique_id:', err.message);
+              });
+            });
+          }
+        });
+      }
     });
   });
 };
@@ -81,6 +131,7 @@ app.get('/api/v1/benchmarks', (req, res) => {
     }
     const benchmarks = rows.map(row => ({
       id: row.id,
+      uniqueId: row.unique_id,
       config: JSON.parse(row.config),
       metrics: JSON.parse(row.metrics),
       createdAt: row.created_at
@@ -102,6 +153,7 @@ app.get('/api/v1/benchmarks/:id', (req, res) => {
     }
     res.json({
       id: row.id,
+      uniqueId: row.unique_id,
       config: JSON.parse(row.config),
       metrics: JSON.parse(row.metrics),
       createdAt: row.created_at
@@ -111,7 +163,7 @@ app.get('/api/v1/benchmarks/:id', (req, res) => {
 
 // Add or update a benchmark (Manual Entry)
 app.post('/api/v1/benchmarks', (req, res) => {
-  const { id, config, metrics, createdAt } = req.body;
+  const { id, uniqueId, config, metrics, createdAt } = req.body;
   
   // Validate config
   const { error: configError } = configSchema.validate(config);
@@ -125,20 +177,21 @@ app.post('/api/v1/benchmarks', (req, res) => {
   }
 
   const benchmarkId = id || uuidv4();
+  const benchmarkUniqueId = uniqueId || generateUniqueId('BM');
   const queryText = `
     /* Upsert benchmark: insert new or update config/metrics if ID exists */
-    INSERT INTO benchmarks(id, config, metrics, created_at) 
-    VALUES(?, ?, ?, ?) 
+    INSERT INTO benchmarks(id, unique_id, config, metrics, created_at) 
+    VALUES(?, ?, ?, ?, ?) 
     ON CONFLICT(id) DO UPDATE SET config=excluded.config, metrics=excluded.metrics
   `;
-  const values = [benchmarkId, JSON.stringify(config), JSON.stringify(metrics), createdAt || new Date().toISOString()];
+  const values = [benchmarkId, benchmarkUniqueId, JSON.stringify(config), JSON.stringify(metrics), createdAt || new Date().toISOString()];
 
   db.run(queryText, values, function(err) {
     if (err) {
       console.error(err.message);
       return res.status(500).json({ error: 'Internal server error' });
     }
-    res.status(201).json({ id: benchmarkId, config, metrics, createdAt: values[3] });
+    res.status(201).json({ id: benchmarkId, uniqueId: benchmarkUniqueId, config, metrics, createdAt: values[4] });
   });
 });
 
@@ -156,16 +209,17 @@ app.post('/api/v1/benchmarks/upload', upload.single('file'), (req, res) => {
     const metrics = parseBenchmarkCSV(csvContent);
 
     const id = uuidv4();
+    const uniqueId = generateUniqueId('BM');
     const createdAt = new Date().toISOString();
-    const queryText = 'INSERT INTO benchmarks(id, config, metrics, created_at) VALUES(?, ?, ?, ?)';
-    const values = [id, JSON.stringify(config), JSON.stringify(metrics), createdAt];
+    const queryText = 'INSERT INTO benchmarks(id, unique_id, config, metrics, created_at) VALUES(?, ?, ?, ?, ?)';
+    const values = [id, uniqueId, JSON.stringify(config), JSON.stringify(metrics), createdAt];
 
     db.run(queryText, values, function(err) {
       if (err) {
         console.error(err.message);
         return res.status(500).json({ error: 'Internal server error' });
       }
-      res.status(201).json({ id, config, metrics, createdAt });
+      res.status(201).json({ id, uniqueId, config, metrics, createdAt });
     });
   } catch (error) {
     console.error('Upload error:', error);
@@ -218,6 +272,7 @@ app.get('/api/v1/reports', (req, res) => {
     }
     const reports = rows.map(row => ({
       id: row.id,
+      uniqueId: row.unique_id,
       benchmarkId1: row.benchmark_id1,
       benchmarkId2: row.benchmark_id2,
       modelName1: row.model_name1,
@@ -234,20 +289,21 @@ app.post('/api/v1/reports', (req, res) => {
   const { error, value } = reportSchema.validate(req.body);
   if (error) return res.status(400).json({ error: error.details[0].message });
 
-  const { id, benchmarkId1, benchmarkId2, modelName1, modelName2, summary, createdAt } = value;
+  const { id, uniqueId, benchmarkId1, benchmarkId2, modelName1, modelName2, summary, createdAt } = value;
   
   const reportId = id || uuidv4();
+  const reportUniqueId = uniqueId || generateUniqueId('RP');
   const reportCreatedAt = createdAt || new Date().toISOString();
   
   const queryText = `
     /* Upsert report: insert new or update summary if ID exists */
-    INSERT INTO reports(id, benchmark_id1, benchmark_id2, model_name1, model_name2, summary, created_at) 
-    VALUES(?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO reports(id, unique_id, benchmark_id1, benchmark_id2, model_name1, model_name2, summary, created_at) 
+    VALUES(?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(id) DO UPDATE SET 
       summary=excluded.summary,
       created_at=excluded.created_at
   `;
-  const values = [reportId, benchmarkId1, benchmarkId2, modelName1, modelName2, summary, reportCreatedAt];
+  const values = [reportId, reportUniqueId, benchmarkId1, benchmarkId2, modelName1, modelName2, summary, reportCreatedAt];
 
   db.run(queryText, values, function(err) {
     if (err) {
@@ -255,7 +311,8 @@ app.post('/api/v1/reports', (req, res) => {
       return res.status(500).json({ error: 'Internal server error' });
     }
     res.status(201).json({ 
-      id: reportId, 
+      id: reportId,
+      uniqueId: reportUniqueId,
       benchmarkId1, 
       benchmarkId2, 
       modelName1, 
@@ -275,6 +332,58 @@ app.delete('/api/v1/reports/:id', (req, res) => {
       return res.status(500).json({ error: 'Internal server error' });
     }
     res.status(204).send();
+  });
+});
+
+// Search by unique ID
+app.get('/api/v1/search/:uniqueId', (req, res) => {
+  const { uniqueId } = req.params;
+  
+  // Search in benchmarks
+  db.get('SELECT * FROM benchmarks WHERE unique_id = ?', [uniqueId], (err, benchmarkRow) => {
+    if (err) {
+      console.error(err.message);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+    
+    if (benchmarkRow) {
+      return res.json({
+        type: 'benchmark',
+        data: {
+          id: benchmarkRow.id,
+          uniqueId: benchmarkRow.unique_id,
+          config: JSON.parse(benchmarkRow.config),
+          metrics: JSON.parse(benchmarkRow.metrics),
+          createdAt: benchmarkRow.created_at
+        }
+      });
+    }
+    
+    // Search in reports
+    db.get('SELECT * FROM reports WHERE unique_id = ?', [uniqueId], (err, reportRow) => {
+      if (err) {
+        console.error(err.message);
+        return res.status(500).json({ error: 'Internal server error' });
+      }
+      
+      if (reportRow) {
+        return res.json({
+          type: 'report',
+          data: {
+            id: reportRow.id,
+            uniqueId: reportRow.unique_id,
+            benchmarkId1: reportRow.benchmark_id1,
+            benchmarkId2: reportRow.benchmark_id2,
+            modelName1: reportRow.model_name1,
+            modelName2: reportRow.model_name2,
+            summary: reportRow.summary,
+            createdAt: reportRow.created_at
+          }
+        });
+      }
+      
+      return res.status(404).json({ error: 'No benchmark or report found with this unique ID' });
+    });
   });
 });
 

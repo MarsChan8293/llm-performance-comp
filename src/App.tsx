@@ -36,6 +36,7 @@ function App() {
     const query = searchQuery.toLowerCase()
     return allBenchmarks.filter(
       (b) =>
+        b.uniqueId?.toLowerCase().includes(query) ||
         b.config.modelName.toLowerCase().includes(query) ||
         b.config.serverName.toLowerCase().includes(query) ||
         b.config.chipName.toLowerCase().includes(query) ||
@@ -56,8 +57,10 @@ function App() {
       const updated = await addBenchmark({ ...editingBenchmark, config, metrics })
       if (updated) toast.success('基准测试更新成功')
     } else {
+      const { generateUniqueId } = await import('@/lib/utils')
       const newBenchmark: Benchmark = {
         id: uuidv4(),
+        uniqueId: generateUniqueId('BM'),
         config,
         metrics,
         createdAt: new Date().toISOString(),

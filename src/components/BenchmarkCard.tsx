@@ -3,8 +3,9 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Benchmark } from '@/lib/types'
-import { PencilSimple, Trash } from '@phosphor-icons/react'
+import { PencilSimple, Trash, Copy } from '@phosphor-icons/react'
 import { parseGpuCount } from '@/lib/utils'
+import { toast } from 'sonner'
 
 interface BenchmarkCardProps {
   benchmark: Benchmark
@@ -21,6 +22,13 @@ export function BenchmarkCard({
   onEdit,
   onDelete,
 }: BenchmarkCardProps) {
+  const handleCopyUniqueId = () => {
+    if (benchmark.uniqueId) {
+      navigator.clipboard.writeText(benchmark.uniqueId)
+      toast.success('编号已复制')
+    }
+  }
+
   return (
     <Card className={`p-4 transition-all hover:shadow-md ${
       isSelected ? 'ring-2 ring-accent' : ''
@@ -36,7 +44,25 @@ export function BenchmarkCard({
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2 mb-2">
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-lg truncate">{benchmark.config.modelName}</h3>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="font-semibold text-lg truncate">{benchmark.config.modelName}</h3>
+                {benchmark.uniqueId && (
+                  <div className="flex items-center gap-1">
+                    <code className="text-xs bg-muted px-2 py-1 rounded font-mono text-muted-foreground">
+                      {benchmark.uniqueId}
+                    </code>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={handleCopyUniqueId}
+                      className="h-6 w-6"
+                      title="复制编号"
+                    >
+                      <Copy size={14} />
+                    </Button>
+                  </div>
+                )}
+              </div>
             </div>
             <div className="flex gap-1 flex-shrink-0">
               <Badge variant="secondary" className="mr-2">

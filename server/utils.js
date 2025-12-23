@@ -30,6 +30,7 @@ const metricsSchema = Joi.object({
 // Joi Schema for Comparison Reports
 const reportSchema = Joi.object({
   id: Joi.string().optional(),
+  uniqueId: Joi.string().optional(),
   benchmarkId1: Joi.string().required(),
   benchmarkId2: Joi.string().required(),
   modelName1: Joi.string().required(),
@@ -131,9 +132,25 @@ function parseBenchmarkCSV(csvContent) {
   });
 }
 
+/**
+ * Generates a unique ID with format: PREFIX-TIMESTAMP-RANDOM6
+ * @param {string} prefix - "BM" for benchmarks, "RP" for reports
+ * @returns {string} Unique ID
+ */
+function generateUniqueId(prefix) {
+  const timestamp = Date.now().toString();
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let randomPart = '';
+  for (let i = 0; i < 6; i++) {
+    randomPart += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return `${prefix}-${timestamp}-${randomPart}`;
+}
+
 module.exports = {
   configSchema,
   metricsSchema,
   reportSchema,
   parseBenchmarkCSV,
+  generateUniqueId,
 };
