@@ -53,28 +53,39 @@ const initDb = () => {
       else console.log('Benchmarks table initialized');
     });
 
-    // Add unique_id column if it doesn't exist (migration)
-    db.run(`
-      ALTER TABLE benchmarks ADD COLUMN unique_id TEXT;
-    `, (err) => {
-      if (err && !err.message.includes('duplicate column')) {
-        console.error('Error adding unique_id column to benchmarks:', err.message);
-      } else {
-        // Generate unique IDs for existing records
-        db.all('SELECT id FROM benchmarks WHERE unique_id IS NULL', [], (err, rows) => {
+    // Check if unique_id column exists and add it if it doesn't (migration)
+    db.all("PRAGMA table_info(benchmarks)", [], (err, columns) => {
+      if (err) {
+        console.error('Error checking benchmarks table structure:', err.message);
+        return;
+      }
+      
+      const hasUniqueId = columns.some(col => col.name === 'unique_id');
+      
+      if (!hasUniqueId) {
+        db.run('ALTER TABLE benchmarks ADD COLUMN unique_id TEXT', (err) => {
           if (err) {
-            console.error('Error selecting benchmarks without unique_id:', err.message);
-          } else if (rows && rows.length > 0) {
-            console.log(`Generating unique IDs for ${rows.length} existing benchmarks...`);
-            rows.forEach(row => {
-              const uniqueId = generateUniqueId('BM');
-              db.run('UPDATE benchmarks SET unique_id = ? WHERE id = ?', [uniqueId, row.id], (err) => {
-                if (err) console.error('Error updating benchmark unique_id:', err.message);
-              });
-            });
+            console.error('Error adding unique_id column to benchmarks:', err.message);
+            return;
           }
+          console.log('Added unique_id column to benchmarks table');
         });
       }
+      
+      // Generate unique IDs for existing records without them
+      db.all('SELECT id FROM benchmarks WHERE unique_id IS NULL', [], (err, rows) => {
+        if (err) {
+          console.error('Error selecting benchmarks without unique_id:', err.message);
+        } else if (rows && rows.length > 0) {
+          console.log(`Generating unique IDs for ${rows.length} existing benchmarks...`);
+          rows.forEach(row => {
+            const uniqueId = generateUniqueId('BM');
+            db.run('UPDATE benchmarks SET unique_id = ? WHERE id = ?', [uniqueId, row.id], (err) => {
+              if (err) console.error('Error updating benchmark unique_id:', err.message);
+            });
+          });
+        }
+      });
     });
 
     const reportQuery = `
@@ -94,28 +105,39 @@ const initDb = () => {
       else console.log('Reports table initialized');
     });
 
-    // Add unique_id column to reports if it doesn't exist (migration)
-    db.run(`
-      ALTER TABLE reports ADD COLUMN unique_id TEXT;
-    `, (err) => {
-      if (err && !err.message.includes('duplicate column')) {
-        console.error('Error adding unique_id column to reports:', err.message);
-      } else {
-        // Generate unique IDs for existing records
-        db.all('SELECT id FROM reports WHERE unique_id IS NULL', [], (err, rows) => {
+    // Check if unique_id column exists and add it if it doesn't (migration)
+    db.all("PRAGMA table_info(reports)", [], (err, columns) => {
+      if (err) {
+        console.error('Error checking reports table structure:', err.message);
+        return;
+      }
+      
+      const hasUniqueId = columns.some(col => col.name === 'unique_id');
+      
+      if (!hasUniqueId) {
+        db.run('ALTER TABLE reports ADD COLUMN unique_id TEXT', (err) => {
           if (err) {
-            console.error('Error selecting reports without unique_id:', err.message);
-          } else if (rows && rows.length > 0) {
-            console.log(`Generating unique IDs for ${rows.length} existing reports...`);
-            rows.forEach(row => {
-              const uniqueId = generateUniqueId('RP');
-              db.run('UPDATE reports SET unique_id = ? WHERE id = ?', [uniqueId, row.id], (err) => {
-                if (err) console.error('Error updating report unique_id:', err.message);
-              });
-            });
+            console.error('Error adding unique_id column to reports:', err.message);
+            return;
           }
+          console.log('Added unique_id column to reports table');
         });
       }
+      
+      // Generate unique IDs for existing records without them
+      db.all('SELECT id FROM reports WHERE unique_id IS NULL', [], (err, rows) => {
+        if (err) {
+          console.error('Error selecting reports without unique_id:', err.message);
+        } else if (rows && rows.length > 0) {
+          console.log(`Generating unique IDs for ${rows.length} existing reports...`);
+          rows.forEach(row => {
+            const uniqueId = generateUniqueId('RP');
+            db.run('UPDATE reports SET unique_id = ? WHERE id = ?', [uniqueId, row.id], (err) => {
+              if (err) console.error('Error updating report unique_id:', err.message);
+            });
+          });
+        }
+      });
     });
   });
 };

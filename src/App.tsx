@@ -204,7 +204,7 @@ function App() {
                     className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
                   />
                   <Input
-                    placeholder="搜索模型、服务器、芯片、框架..."
+                    placeholder="搜索编号、模型、服务器、芯片、框架..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-10"
