@@ -76,7 +76,8 @@ const HEADER_MAPPINGS = {
  */
 const UNIT_CONVERSIONS = [
   {
-    identifiers: ['(s)', 's)', 'seconds', 'sec'],
+    // Only match standalone seconds, not rates like tok/s
+    identifiers: ['duration (s)', 'duration(s)', 'time (s)', 'time(s)'],
     factor: 1000, // seconds to milliseconds
     description: 'seconds to milliseconds',
   },
@@ -98,12 +99,17 @@ function normalizeHeader(header) {
  * Checks if a value needs unit conversion based on the original header
  */
 function needsUnitConversion(originalHeader) {
-  const normalized = normalizeHeader(originalHeader);
+  const lower = originalHeader.toLowerCase();
   
-  for (const conversion of UNIT_CONVERSIONS) {
-    for (const identifier of conversion.identifiers) {
-      if (normalized.includes(normalizeHeader(identifier))) {
-        return conversion.factor;
+  // Check for seconds (but not milliseconds)
+  // Must not contain 'ms' or 'millisecond'
+  if (!lower.includes('ms') && !lower.includes('millisecond')) {
+    for (const conversion of UNIT_CONVERSIONS) {
+      for (const identifier of conversion.identifiers) {
+        const normalizedId = identifier.toLowerCase();
+        if (lower.includes(normalizedId)) {
+          return conversion.factor;
+        }
       }
     }
   }
