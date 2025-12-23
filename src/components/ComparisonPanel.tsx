@@ -4,6 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { 
   AlertDialog, 
   AlertDialogAction, 
@@ -154,13 +155,37 @@ export function ComparisonPanel({ benchmark1, benchmark2 }: ComparisonPanelProps
     )
   }
 
-  const ConfigRow = ({ label, value1, value2 }: { label: string; value1: string; value2: string }) => (
-    <div className="grid grid-cols-[1fr_auto_1fr] gap-4 items-start py-3 border-b last:border-0">
-      <div className="text-right text-sm font-medium break-words text-blue-600">{value1}</div>
-      <div className="text-sm text-muted-foreground min-w-[120px] text-center px-2">{label}</div>
-      <div className="text-sm font-medium break-words text-purple-600">{value2}</div>
-    </div>
-  )
+  const ConfigRow = ({ label, value1, value2 }: { label: string; value1: string; value2: string }) => {
+    const isDifferent = value1 !== value2
+    
+    return (
+      <div className={cn(
+        "grid grid-cols-[1fr_auto_1fr] gap-4 items-start py-3 border-b last:border-0",
+        isDifferent && "bg-amber-50/50"
+      )}>
+        <div className={cn(
+          "text-right text-sm font-medium break-words px-2 py-1 rounded",
+          isDifferent ? "bg-blue-100 text-blue-700" : "text-blue-600"
+        )}>
+          {value1}
+        </div>
+        <div className="text-sm text-muted-foreground min-w-[120px] text-center px-2 flex flex-col items-center gap-1">
+          <span>{label}</span>
+          {isDifferent && (
+            <Badge variant="outline" className="bg-amber-100 text-amber-700 border-amber-300 text-[10px] px-1.5 py-0">
+              不同
+            </Badge>
+          )}
+        </div>
+        <div className={cn(
+          "text-sm font-medium break-words px-2 py-1 rounded",
+          isDifferent ? "bg-purple-100 text-purple-700" : "text-purple-600"
+        )}>
+          {value2}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
