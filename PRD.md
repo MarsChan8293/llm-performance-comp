@@ -25,9 +25,6 @@ The application uses a centralized backend with a RESTful API for data persisten
 - `GET /api/v1/reports`: Retrieve all comparison reports.
 - `POST /api/v1/reports`: Save a new comparison report.
 - `DELETE /api/v1/reports/:id`: Remove a comparison report.
-- `GET /api/v1/messages`: Retrieve all message board entries.
-- `POST /api/v1/messages`: Post a new message to the board.
-- `DELETE /api/v1/messages/:id`: Remove a message.
 
 #### Data Validation & Processing
 - **Backend Parsing**: CSV files are parsed on the server to ensure consistent metric calculation (e.g., TPOT).
@@ -64,14 +61,7 @@ The application uses a centralized backend with a RESTful API for data persisten
 - **Progression**: Select first benchmark → Select second benchmark → Click Compare → View comparison panel with metrics side-by-side → Differences highlighted with visual indicators
 - **Success criteria**: Clear visual comparison showing all metrics, performance deltas calculated and displayed
 
-### Feature 5: Message Board
-- **Functionality**: A community board for users to post feedback, questions, or insights.
-- **Purpose**: Foster community engagement and provide a space for qualitative discussion alongside quantitative data.
-- **Trigger**: User navigates to the "Message Board" section.
-- **Progression**: View messages → Click "Post Message" → Fill content and author → Submit → Message appears on the board.
-- **Success criteria**: Messages persist, display correctly with author and timestamp, and can be deleted by authorized users.
-
-### Feature 6: Comparison Reports
+### Feature 5: Comparison Reports
 - **Functionality**: Save comparison results as persistent reports with summaries.
 - **Purpose**: Document and share specific performance findings for future reference.
 - **Trigger**: User clicks "Save Report" in the comparison view.
