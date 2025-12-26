@@ -36,3 +36,6 @@ server/*.db
 server/*.sqlite
 *.db
 *.sqlite
+
+# Dependency lock files (can be regenerated)
+**/package-lock.json
