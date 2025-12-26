@@ -146,12 +146,6 @@ export function BenchmarkCard({
               <span className="text-muted-foreground">算子加速</span>
               <span className="font-medium">{benchmark.config.operatorAcceleration || '无'}</span>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-muted-foreground">框架启动参数</span>
-              <span className="font-mono text-xs bg-muted/50 px-2 py-1 rounded">
-                {benchmark.config.frameworkParams || '无'}
-              </span>
-            </div>
             {benchmark.config.notes && (
               <div className="flex items-center gap-2">
                 <span className="text-muted-foreground">备注</span>
