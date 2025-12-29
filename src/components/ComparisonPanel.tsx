@@ -16,7 +16,7 @@ import {
   AlertDialogTitle 
 } from '@/components/ui/alert-dialog'
 import { Benchmark, PerformanceMetrics, ComparisonReport } from '@/lib/types'
-import { CaretUp, CaretDown, FloppyDisk, FileText, Plus, Copy } from '@phosphor-icons/react'
+import { CaretUp, CaretDown, FloppyDisk, FileText, Plus, Copy, ArrowsLeftRight } from '@phosphor-icons/react'
 import { cn, parseGpuCount, generateUniqueId } from '@/lib/utils'
 import { useDbReports } from '@/hooks/use-db-reports'
 import { toast } from 'sonner'
@@ -32,9 +32,20 @@ export function ComparisonPanel({ benchmark1, benchmark2 }: ComparisonPanelProps
   const [summary, setSummary] = useState('')
   const [isOverwriteDialogOpen, setIsOverwriteDialogOpen] = useState(false)
   const [existingReport, setExistingReport] = useState<ComparisonReport | null>(null)
+  const [isSwapped, setIsSwapped] = useState(false)
 
   const gpuCount1 = useMemo(() => parseGpuCount(benchmark1.config.shardingConfig), [benchmark1.config.shardingConfig])
   const gpuCount2 = useMemo(() => parseGpuCount(benchmark2.config.shardingConfig), [benchmark2.config.shardingConfig])
+
+  // Swap benchmarks if isSwapped is true
+  const displayBenchmark1 = isSwapped ? benchmark2 : benchmark1
+  const displayBenchmark2 = isSwapped ? benchmark1 : benchmark2
+  const displayGpuCount1 = isSwapped ? gpuCount2 : gpuCount1
+  const displayGpuCount2 = isSwapped ? gpuCount1 : gpuCount2
+
+  const handleSwap = () => {
+    setIsSwapped(!isSwapped)
+  }
 
   const handleCopyUniqueId = async (uniqueId: string) => {
     try {
@@ -87,10 +98,10 @@ export function ComparisonPanel({ benchmark1, benchmark2 }: ComparisonPanelProps
     const report: ComparisonReport = {
       id: overwrite && existingReport ? existingReport.id : uuidv4(),
       uniqueId: overwrite && existingReport ? existingReport.uniqueId : generateUniqueId('RP'),
-      benchmarkId1: benchmark1.id,
-      benchmarkId2: benchmark2.id,
-      modelName1: benchmark1.config.modelName,
-      modelName2: benchmark2.config.modelName,
+      benchmarkId1: displayBenchmark1.id,
+      benchmarkId2: displayBenchmark2.id,
+      modelName1: displayBenchmark1.config.modelName,
+      modelName2: displayBenchmark2.config.modelName,
       summary: summary.trim(),
       createdAt: new Date().toISOString()
     }
@@ -125,8 +136,8 @@ export function ComparisonPanel({ benchmark1, benchmark2 }: ComparisonPanelProps
     return result
   }
 
-  const metrics1 = aggregateMetrics(benchmark1.metrics)
-  const metrics2 = aggregateMetrics(benchmark2.metrics)
+  const metrics1 = aggregateMetrics(displayBenchmark1.metrics)
+  const metrics2 = aggregateMetrics(displayBenchmark2.metrics)
 
   // Get all unique keys from both benchmarks
   const allKeys = Array.from(new Set([...metrics1.keys(), ...metrics2.keys()])).sort((a, b) => {
@@ -222,17 +233,17 @@ export function ComparisonPanel({ benchmark1, benchmark2 }: ComparisonPanelProps
             基准测试 A
           </h3>
           <div className="space-y-1">
-            <p className="text-sm font-bold text-blue-900">{benchmark1.config.modelName}</p>
-            <p className="text-xs text-blue-700/70">{benchmark1.config.serverName}</p>
-            {benchmark1.uniqueId && (
+            <p className="text-sm font-bold text-blue-900">{displayBenchmark1.config.modelName}</p>
+            <p className="text-xs text-blue-700/70">{displayBenchmark1.config.serverName}</p>
+            {displayBenchmark1.uniqueId && (
               <div className="flex items-center gap-1 mt-2">
                 <code className="text-xs bg-blue-100 px-2 py-1 rounded font-mono text-blue-800">
-                  {benchmark1.uniqueId}
+                  {displayBenchmark1.uniqueId}
                 </code>
                 <Button
                   size="icon"
                   variant="ghost"
-                  onClick={() => handleCopyUniqueId(benchmark1.uniqueId)}
+                  onClick={() => handleCopyUniqueId(displayBenchmark1.uniqueId)}
                   className="h-6 w-6 text-blue-700 hover:text-blue-900"
                   title="复制编号"
                 >
@@ -243,8 +254,17 @@ export function ComparisonPanel({ benchmark1, benchmark2 }: ComparisonPanelProps
           </div>
         </Card>
         
-        <div className="hidden md:flex items-center justify-center py-4">
+        <div className="hidden md:flex items-center justify-center py-4 flex-col gap-2">
           <div className="text-xl font-black text-muted-foreground/30 italic">VS</div>
+          <Button
+            size="icon"
+            variant="outline"
+            onClick={handleSwap}
+            className="h-9 w-9 rounded-full border-2 hover:bg-primary/10 hover:border-primary transition-all"
+            title="切换基准测试位置"
+          >
+            <ArrowsLeftRight size={18} weight="bold" className="text-primary" />
+          </Button>
         </div>
         
         <Card className="p-4 border-purple-200 bg-purple-50/30">
@@ -253,17 +273,17 @@ export function ComparisonPanel({ benchmark1, benchmark2 }: ComparisonPanelProps
             基准测试 B
           </h3>
           <div className="space-y-1">
-            <p className="text-sm font-bold text-purple-900">{benchmark2.config.modelName}</p>
-            <p className="text-xs text-purple-700/70">{benchmark2.config.serverName}</p>
-            {benchmark2.uniqueId && (
+            <p className="text-sm font-bold text-purple-900">{displayBenchmark2.config.modelName}</p>
+            <p className="text-xs text-purple-700/70">{displayBenchmark2.config.serverName}</p>
+            {displayBenchmark2.uniqueId && (
               <div className="flex items-center gap-1 mt-2">
                 <code className="text-xs bg-purple-100 px-2 py-1 rounded font-mono text-purple-800">
-                  {benchmark2.uniqueId}
+                  {displayBenchmark2.uniqueId}
                 </code>
                 <Button
                   size="icon"
                   variant="ghost"
-                  onClick={() => handleCopyUniqueId(benchmark2.uniqueId)}
+                  onClick={() => handleCopyUniqueId(displayBenchmark2.uniqueId)}
                   className="h-6 w-6 text-purple-700 hover:text-purple-900"
                   title="复制编号"
                 >
@@ -283,63 +303,63 @@ export function ComparisonPanel({ benchmark1, benchmark2 }: ComparisonPanelProps
         <div className="space-y-1">
           <ConfigRow 
             label="提交人" 
-            value1={benchmark1.config.submitter} 
-            value2={benchmark2.config.submitter} 
+            value1={displayBenchmark1.config.submitter} 
+            value2={displayBenchmark2.config.submitter} 
           />
           <ConfigRow 
             label="模型名称" 
-            value1={benchmark1.config.modelName} 
-            value2={benchmark2.config.modelName} 
+            value1={displayBenchmark1.config.modelName} 
+            value2={displayBenchmark2.config.modelName} 
           />
           <ConfigRow 
             label="服务器名称" 
-            value1={benchmark1.config.serverName} 
-            value2={benchmark2.config.serverName} 
+            value1={displayBenchmark1.config.serverName} 
+            value2={displayBenchmark2.config.serverName} 
           />
           <ConfigRow 
             label="AI 芯片" 
-            value1={benchmark1.config.chipName} 
-            value2={benchmark2.config.chipName} 
+            value1={displayBenchmark1.config.chipName} 
+            value2={displayBenchmark2.config.chipName} 
           />
           <ConfigRow 
             label="推理框架" 
-            value1={benchmark1.config.framework} 
-            value2={benchmark2.config.framework} 
+            value1={displayBenchmark1.config.framework} 
+            value2={displayBenchmark2.config.framework} 
           />
           <ConfigRow 
             label="推理框架版本号" 
-            value1={benchmark1.config.frameworkVersion} 
-            value2={benchmark2.config.frameworkVersion} 
+            value1={displayBenchmark1.config.frameworkVersion} 
+            value2={displayBenchmark2.config.frameworkVersion} 
           />
           <ConfigRow 
             label="切分参数" 
-            value1={benchmark1.config.shardingConfig} 
-            value2={benchmark2.config.shardingConfig} 
+            value1={displayBenchmark1.config.shardingConfig} 
+            value2={displayBenchmark2.config.shardingConfig} 
           />
           <ConfigRow 
             label="算子加速" 
-            value1={benchmark1.config.operatorAcceleration || '无'} 
-            value2={benchmark2.config.operatorAcceleration || '无'} 
+            value1={displayBenchmark1.config.operatorAcceleration || '无'} 
+            value2={displayBenchmark2.config.operatorAcceleration || '无'} 
           />
           <ConfigRow 
             label="框架启动参数" 
-            value1={benchmark1.config.frameworkParams || '无'} 
-            value2={benchmark2.config.frameworkParams || '无'} 
+            value1={displayBenchmark1.config.frameworkParams || '无'} 
+            value2={displayBenchmark2.config.frameworkParams || '无'} 
           />
           <ConfigRow 
             label="测试日期" 
-            value1={benchmark1.config.testDate} 
-            value2={benchmark2.config.testDate} 
+            value1={displayBenchmark1.config.testDate} 
+            value2={displayBenchmark2.config.testDate} 
           />
           <ConfigRow 
             label="备注" 
-            value1={benchmark1.config.notes || '无'} 
-            value2={benchmark2.config.notes || '无'} 
+            value1={displayBenchmark1.config.notes || '无'} 
+            value2={displayBenchmark2.config.notes || '无'} 
           />
           <ConfigRow 
             label="测试数据量" 
-            value1={`${benchmark1.metrics.length} 条`} 
-            value2={`${benchmark2.metrics.length} 条`} 
+            value1={`${displayBenchmark1.metrics.length} 条`} 
+            value2={`${displayBenchmark2.metrics.length} 条`} 
           />
         </div>
       </Card>
@@ -384,8 +404,8 @@ export function ComparisonPanel({ benchmark1, benchmark2 }: ComparisonPanelProps
                   const m2 = metrics2.get(key)
                   const [c] = key.split('-')
 
-                  const tpsPerGpu1 = m1 ? m1.tokensPerSecond / gpuCount1 : undefined
-                  const tpsPerGpu2 = m2 ? m2.tokensPerSecond / gpuCount2 : undefined
+                  const tpsPerGpu1 = m1 ? m1.tokensPerSecond / displayGpuCount1 : undefined
+                  const tpsPerGpu2 = m2 ? m2.tokensPerSecond / displayGpuCount2 : undefined
 
                   return (
                     <TableRow key={`special-${key}`}>
@@ -495,8 +515,8 @@ export function ComparisonPanel({ benchmark1, benchmark2 }: ComparisonPanelProps
                 const m2 = metrics2.get(key)
                 const [c, i, o] = key.split('-')
 
-                const tpsPerGpu1 = m1 ? m1.tokensPerSecond / gpuCount1 : undefined
-                const tpsPerGpu2 = m2 ? m2.tokensPerSecond / gpuCount2 : undefined
+                const tpsPerGpu1 = m1 ? m1.tokensPerSecond / displayGpuCount1 : undefined
+                const tpsPerGpu2 = m2 ? m2.tokensPerSecond / displayGpuCount2 : undefined
 
                 return (
                   <TableRow key={key}>
