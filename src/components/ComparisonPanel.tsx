@@ -98,10 +98,10 @@ export function ComparisonPanel({ benchmark1, benchmark2 }: ComparisonPanelProps
     const report: ComparisonReport = {
       id: overwrite && existingReport ? existingReport.id : uuidv4(),
       uniqueId: overwrite && existingReport ? existingReport.uniqueId : generateUniqueId('RP'),
-      benchmarkId1: displayBenchmark1.id,
-      benchmarkId2: displayBenchmark2.id,
-      modelName1: displayBenchmark1.config.modelName,
-      modelName2: displayBenchmark2.config.modelName,
+      benchmarkId1: benchmark1.id,
+      benchmarkId2: benchmark2.id,
+      modelName1: benchmark1.config.modelName,
+      modelName2: benchmark2.config.modelName,
       summary: summary.trim(),
       createdAt: new Date().toISOString()
     }
