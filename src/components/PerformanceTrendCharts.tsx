@@ -127,9 +127,7 @@ export function PerformanceTrendCharts({
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis 
             dataKey="concurrency" 
-            type="number"
-            domain={['dataMin', 'dataMax']}
-            tickCount={filteredData.length}
+            type="category"
             label={{ value: '并发数', position: 'insideBottom', offset: -5 }}
           />
           <YAxis 
@@ -160,9 +158,7 @@ export function PerformanceTrendCharts({
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis 
             dataKey="concurrency"
-            type="number"
-            domain={['dataMin', 'dataMax']}
-            tickCount={filteredData.length}
+            type="category"
             label={{ value: '并发数', position: 'insideBottom', offset: -5 }}
           />
           <YAxis 
@@ -189,13 +185,11 @@ export function PerformanceTrendCharts({
     <Card key={`bar-${dataKey1}`} className="p-6">
       <h4 className="font-semibold mb-4 text-center">{title}</h4>
       <ChartContainer config={chartConfig} className="h-[300px] w-full">
-        <BarChart data={filteredData}>
+        <BarChart data={filteredData} barSize={40}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis 
             dataKey="concurrency"
-            type="number"
-            domain={['dataMin', 'dataMax']}
-            tickCount={filteredData.length}
+            type="category"
             label={{ value: '并发数', position: 'insideBottom', offset: -5 }}
           />
           <YAxis 
