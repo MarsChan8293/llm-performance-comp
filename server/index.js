@@ -532,7 +532,8 @@ app.get('/api/benchmarks', (req, res) => res.redirect(301, '/api/v1/benchmarks')
 app.post('/api/benchmarks', (req, res) => res.redirect(307, '/api/v1/benchmarks'));
 
 // SPA fallback - serve index.html for all non-API routes
-app.get(/^(?!\/api).*/, (req, res) => {
+// This regex matches any route that doesn't start with /api/
+app.get(/^(?!\/api\/).*$/, (req, res) => {
   const indexPath = path.join(__dirname, '../dist/index.html');
   if (require('fs').existsSync(indexPath)) {
     res.sendFile(indexPath);
