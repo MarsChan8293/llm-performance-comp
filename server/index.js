@@ -144,9 +144,69 @@ const initDb = () => {
 
 // API Routes (v1)
 
-// Get all benchmarks
+// Get all benchmarks with optional advanced search filters
 app.get('/api/v1/benchmarks', (req, res) => {
-  db.all('SELECT * FROM benchmarks ORDER BY created_at DESC', [], (err, rows) => {
+  const {
+    submitter,
+    modelName,
+    serverName,
+    shardingConfig,
+    chipName,
+    framework,
+    frameworkVersion,
+    startDate,
+    endDate,
+    operatorAcceleration,
+    notes,
+    frameworkParams
+  } = req.query;
+
+  let query = 'SELECT * FROM benchmarks';
+  const conditions = [];
+  const params = [];
+
+  // Build WHERE clause based on provided filters
+  if (submitter || modelName || serverName || shardingConfig || chipName || 
+      framework || frameworkVersion || startDate || endDate || 
+      operatorAcceleration || notes || frameworkParams) {
+    
+    // Helper function to add condition for config field
+    const addConfigCondition = (field, value) => {
+      if (value) {
+        conditions.push(`json_extract(config, '$.${field}') LIKE ?`);
+        params.push(`%${value}%`);
+      }
+    };
+
+    addConfigCondition('submitter', submitter);
+    addConfigCondition('modelName', modelName);
+    addConfigCondition('serverName', serverName);
+    addConfigCondition('shardingConfig', shardingConfig);
+    addConfigCondition('chipName', chipName);
+    addConfigCondition('framework', framework);
+    addConfigCondition('frameworkVersion', frameworkVersion);
+    addConfigCondition('operatorAcceleration', operatorAcceleration);
+    addConfigCondition('notes', notes);
+    addConfigCondition('frameworkParams', frameworkParams);
+
+    // Date range filter
+    if (startDate) {
+      conditions.push(`json_extract(config, '$.testDate') >= ?`);
+      params.push(startDate);
+    }
+    if (endDate) {
+      conditions.push(`json_extract(config, '$.testDate') <= ?`);
+      params.push(endDate);
+    }
+  }
+
+  if (conditions.length > 0) {
+    query += ' WHERE ' + conditions.join(' AND ');
+  }
+
+  query += ' ORDER BY created_at DESC';
+
+  db.all(query, params, (err, rows) => {
     if (err) {
       console.error(err.message);
       return res.status(500).json({ error: 'Internal server error' });
