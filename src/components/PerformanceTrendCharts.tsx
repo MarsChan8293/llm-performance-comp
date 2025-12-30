@@ -92,16 +92,16 @@ export function PerformanceTrendCharts({
     },
     benchmark1: {
       label: modelName1,
-      color: "hsl(220, 70%, 50%)", // Blue
+      color: "hsl(220, 50%, 65%)", // Softer blue
     },
     benchmark2: {
       label: modelName2,
-      color: "hsl(280, 70%, 50%)", // Purple
+      color: "hsl(280, 50%, 65%)", // Softer purple
     },
   }
 
-  // Custom label formatter to show values with limited decimals
-  const renderCustomLabel = (props: any) => {
+  // Custom label formatter for bar charts
+  const renderBarLabel = (props: any) => {
     const { x, y, width, height, value } = props
     if (value === undefined || value === null) return null
     
@@ -109,6 +109,25 @@ export function PerformanceTrendCharts({
       <text 
         x={x + width / 2} 
         y={y - 5} 
+        fill="#666" 
+        textAnchor="middle" 
+        fontSize={10}
+        fontWeight="bold"
+      >
+        {typeof value === 'number' ? value.toFixed(1) : value}
+      </text>
+    )
+  }
+
+  // Custom label formatter for line charts
+  const renderLineLabel = (props: any) => {
+    const { x, y, value } = props
+    if (value === undefined || value === null) return null
+    
+    return (
+      <text 
+        x={x} 
+        y={y - 10} 
         fill="#666" 
         textAnchor="middle" 
         fontSize={10}
@@ -143,7 +162,7 @@ export function PerformanceTrendCharts({
             strokeWidth={2}
             dot={{ r: 4 }}
           >
-            <LabelList content={renderCustomLabel} />
+            <LabelList content={renderLineLabel} />
           </Line>
         </LineChart>
       </ChartContainer>
@@ -174,7 +193,7 @@ export function PerformanceTrendCharts({
             strokeWidth={2}
             dot={{ r: 4 }}
           >
-            <LabelList content={renderCustomLabel} />
+            <LabelList content={renderLineLabel} />
           </Line>
         </LineChart>
       </ChartContainer>
@@ -202,14 +221,14 @@ export function PerformanceTrendCharts({
             fill={chartConfig.benchmark1.color}
             name={modelName1}
           >
-            <LabelList content={renderCustomLabel} />
+            <LabelList content={renderBarLabel} />
           </Bar>
           <Bar 
             dataKey={dataKey2} 
             fill={chartConfig.benchmark2.color}
             name={modelName2}
           >
-            <LabelList content={renderCustomLabel} />
+            <LabelList content={renderBarLabel} />
           </Bar>
         </BarChart>
       </ChartContainer>
