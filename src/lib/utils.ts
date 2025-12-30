@@ -71,3 +71,32 @@ export function generateUniqueId(prefix: 'BM' | 'RP'): string {
   }
   return `${prefix}-${timestamp}-${randomPart}`
 }
+
+/**
+ * Copies text to clipboard with fallback for older browsers
+ * @param text - Text to copy to clipboard
+ * @param successMessage - Message to show on success
+ * @returns Promise that resolves to true if successful
+ */
+export async function copyToClipboard(text: string, successMessage = '已复制'): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(text)
+    return true
+  } catch (err) {
+    // Fallback for browsers that don't support clipboard API
+    const textArea = document.createElement('textarea')
+    textArea.value = text
+    textArea.style.position = 'fixed'
+    textArea.style.left = '-999999px'
+    document.body.appendChild(textArea)
+    textArea.select()
+    try {
+      const successful = document.execCommand('copy')
+      document.body.removeChild(textArea)
+      return successful
+    } catch (e) {
+      document.body.removeChild(textArea)
+      return false
+    }
+  }
+}

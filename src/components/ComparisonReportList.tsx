@@ -4,7 +4,8 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { ComparisonReport } from '@/lib/types'
-import { MagnifyingGlass, Trash, CalendarBlank, ArrowsLeftRight, FileText, Copy } from '@phosphor-icons/react'
+import { copyToClipboard } from '@/lib/utils'
+import { MagnifyingGlass, Trash, CalendarBlank, ArrowsLeftRight, FileText, Copy, Link } from '@phosphor-icons/react'
 import { format } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 import { toast } from 'sonner'
@@ -37,24 +38,22 @@ export function ComparisonReportList({
 
   const handleCopyUniqueId = async (e: React.MouseEvent, uniqueId: string) => {
     e.stopPropagation()
-    try {
-      await navigator.clipboard.writeText(uniqueId)
+    const success = await copyToClipboard(uniqueId)
+    if (success) {
       toast.success('编号已复制')
-    } catch (err) {
-      // Fallback for browsers that don't support clipboard API
-      const textArea = document.createElement('textarea')
-      textArea.value = uniqueId
-      textArea.style.position = 'fixed'
-      textArea.style.left = '-999999px'
-      document.body.appendChild(textArea)
-      textArea.select()
-      try {
-        document.execCommand('copy')
-        toast.success('编号已复制')
-      } catch (e) {
-        toast.error('复制失败，请手动复制')
-      }
-      document.body.removeChild(textArea)
+    } else {
+      toast.error('复制失败，请手动复制')
+    }
+  }
+
+  const handleCopyLink = async (e: React.MouseEvent, uniqueId: string) => {
+    e.stopPropagation()
+    const link = `${window.location.origin}?report=${uniqueId}`
+    const success = await copyToClipboard(link)
+    if (success) {
+      toast.success('链接已复制到剪贴板')
+    } else {
+      toast.error('复制失败，请手动复制')
     }
   }
 
@@ -121,6 +120,15 @@ export function ComparisonReportList({
                         title="复制编号"
                       >
                         <Copy size={14} />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={(e) => handleCopyLink(e, report.uniqueId)}
+                        className="h-6 w-6"
+                        title="复制分享链接"
+                      >
+                        <Link size={14} />
                       </Button>
                     </div>
                   )}

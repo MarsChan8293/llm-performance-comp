@@ -531,6 +531,17 @@ app.get('/api/v1/search/:uniqueId', (req, res) => {
 app.get('/api/benchmarks', (req, res) => res.redirect(301, '/api/v1/benchmarks'));
 app.post('/api/benchmarks', (req, res) => res.redirect(307, '/api/v1/benchmarks'));
 
+// SPA fallback - serve index.html for all non-API routes
+// This regex matches any route that doesn't start with /api/
+app.get(/^(?!\/api\/).*$/, (req, res) => {
+  const indexPath = path.join(__dirname, '../dist/index.html');
+  if (require('fs').existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.status(404).send('Application not built yet. Please run `npm run build` first.');
+  }
+});
+
 // Global Error Handler
 app.use((err, req, res, next) => {
   console.error('Unhandled Error:', err.stack);
