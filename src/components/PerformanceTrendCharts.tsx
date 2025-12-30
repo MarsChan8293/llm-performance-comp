@@ -84,11 +84,11 @@ export function PerformanceTrendCharts({
   const chartConfig = {
     percentage: {
       label: "对比百分比",
-      color: "hsl(var(--chart-1))",
+      color: "hsl(200, 60%, 70%)", // Softer cyan-blue
     },
     ratio: {
       label: "对比比值",
-      color: "hsl(var(--chart-2))",
+      color: "hsl(160, 55%, 65%)", // Softer teal-green
     },
     benchmark1: {
       label: modelName1,
@@ -153,12 +153,10 @@ export function PerformanceTrendCharts({
             label={{ value: '百分比 (%)', angle: -90, position: 'insideLeft' }}
           />
           <ChartTooltip content={<ChartTooltipContent />} />
-          <Legend />
           <Line 
             type="monotone" 
             dataKey={dataKey} 
             stroke={chartConfig.percentage.color}
-            name="对比百分比 (%)"
             strokeWidth={2}
             dot={{ r: 4 }}
           >
@@ -184,12 +182,10 @@ export function PerformanceTrendCharts({
             label={{ value: '基准测试A / 基准测试B', angle: -90, position: 'insideLeft' }}
           />
           <ChartTooltip content={<ChartTooltipContent />} />
-          <Legend />
           <Line 
             type="monotone" 
             dataKey={dataKey} 
             stroke={chartConfig.ratio.color}
-            name="对比比值"
             strokeWidth={2}
             dot={{ r: 4 }}
           >
@@ -209,7 +205,7 @@ export function PerformanceTrendCharts({
           <XAxis 
             dataKey="concurrency"
             type="category"
-            label={{ value: '并发数', position: 'insideBottom', offset: -5 }}
+            label={{ value: '并发数', position: 'insideBottom', offset: -10 }}
           />
           <YAxis 
             label={{ value: yAxisLabel, angle: -90, position: 'insideLeft' }}
