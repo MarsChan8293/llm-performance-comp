@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useDbBenchmarks } from '@/hooks/use-db-benchmarks'
 import { useDbReports } from '@/hooks/use-db-reports'
 import { Button } from '@/components/ui/button'
@@ -23,6 +24,7 @@ import { format } from 'date-fns'
 function App() {
   const { benchmarks, addBenchmark, deleteBenchmark, importBenchmarks, isLoading: isBenchmarksLoading } = useDbBenchmarks()
   const { reports, deleteReport, isLoading: isReportsLoading } = useDbReports()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [searchQuery, setSearchQuery] = useState('')
   const [advancedFilters, setAdvancedFilters] = useState<AdvancedSearchFilters>({})
@@ -32,6 +34,29 @@ function App() {
   const [activeTab, setActiveTab] = useState('list')
 
   const isLoading = isBenchmarksLoading || isReportsLoading
+
+  // Handle URL parameters for direct report access
+  useEffect(() => {
+    const reportId = searchParams.get('report')
+    if (reportId && reports.length > 0 && benchmarks.length > 0) {
+      const report = reports.find(r => r.uniqueId === reportId)
+      if (report) {
+        const b1 = benchmarks.find(b => b.id === report.benchmarkId1)
+        const b2 = benchmarks.find(b => b.id === report.benchmarkId2)
+        
+        if (b1 && b2) {
+          setSelectedIds(new Set([report.benchmarkId1, report.benchmarkId2]))
+          setActiveTab('compare')
+        } else {
+          toast.error('关联的基准测试数据已不存在')
+        }
+      } else {
+        toast.error('未找到指定的对比报告')
+      }
+      // Clear the URL parameter after processing
+      setSearchParams({})
+    }
+  }, [searchParams, reports, benchmarks, setSearchParams])
 
   const filteredBenchmarks = useMemo(() => {
     const allBenchmarks = benchmarks || []
