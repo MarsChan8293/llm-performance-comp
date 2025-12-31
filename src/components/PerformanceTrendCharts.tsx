@@ -92,11 +92,11 @@ export function PerformanceTrendCharts({
     },
     benchmark1: {
       label: modelName1,
-      color: "hsl(220, 50%, 65%)", // Softer blue
+      color: "hsl(210, 70%, 65%)", // Softer, brighter blue
     },
     benchmark2: {
       label: modelName2,
-      color: "hsl(280, 50%, 65%)", // Softer purple
+      color: "hsl(280, 60%, 70%)", // Softer, brighter purple
     },
   }
 

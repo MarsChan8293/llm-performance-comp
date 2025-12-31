@@ -197,6 +197,9 @@ export function ComparisonPanel({ benchmark1, benchmark2 }: ComparisonPanelProps
     const normalizedValue2 = value2?.trim() || ''
     const isDifferent = normalizedValue1 !== normalizedValue2
     
+    // Check if this is a multi-line field that needs special formatting
+    const isMultiLine = label === '框架启动参数' || label === '备注'
+    
     return (
       <div className={cn(
         "grid grid-cols-[1fr_auto_1fr] gap-4 items-start py-3 border-b last:border-0",
@@ -204,7 +207,8 @@ export function ComparisonPanel({ benchmark1, benchmark2 }: ComparisonPanelProps
       )}>
         <div className={cn(
           "text-right text-sm font-medium break-words px-2 py-1 rounded",
-          isDifferent ? "bg-blue-100 text-blue-700" : "text-blue-600"
+          isDifferent ? "bg-blue-100 text-blue-700" : "text-blue-600",
+          isMultiLine && "font-mono whitespace-pre-wrap text-left"
         )}>
           {value1}
         </div>
@@ -218,7 +222,8 @@ export function ComparisonPanel({ benchmark1, benchmark2 }: ComparisonPanelProps
         </div>
         <div className={cn(
           "text-sm font-medium break-words px-2 py-1 rounded",
-          isDifferent ? "bg-purple-100 text-purple-700" : "text-purple-600"
+          isDifferent ? "bg-purple-100 text-purple-700" : "text-purple-600",
+          isMultiLine && "font-mono whitespace-pre-wrap text-left"
         )}>
           {value2}
         </div>
