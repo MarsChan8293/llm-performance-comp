@@ -13,6 +13,7 @@ import { BenchmarkCard } from '@/components/BenchmarkCard'
 import { ComparisonPanel } from '@/components/ComparisonPanel'
 import { ComparisonReportList } from '@/components/ComparisonReportList'
 import { AdvancedSearchPanel, AdvancedSearchFilters } from '@/components/AdvancedSearchPanel'
+import { MultiVersionTrendCharts } from '@/components/MultiVersionTrendCharts'
 
 import { Benchmark, BenchmarkConfig, BenchmarkMetricsEntry, ComparisonReport } from '@/lib/types'
 import { Plus, MagnifyingGlass, ArrowsLeftRight, ChartBar, FileArrowDown, FileText } from '@phosphor-icons/react'
@@ -272,6 +273,9 @@ function App() {
                     </Badge>
                   )}
                 </TabsTrigger>
+                <TabsTrigger value="trends">
+                  性能趋势图
+                </TabsTrigger>
               </TabsList>
 
               <div className="flex gap-2 w-full md:w-auto">
@@ -281,18 +285,22 @@ function App() {
                     性能对比
                   </Button>
                 )}
-                <Button 
-                  onClick={() => setIsCSVImportOpen(true)} 
-                  variant="outline" 
-                  className="flex-1 md:flex-none"
-                >
-                  <FileArrowDown size={18} weight="bold" className="mr-2" />
-                  导入 CSV
-                </Button>
-                <Button onClick={handleAddNew} className="flex-1 md:flex-none">
-                  <Plus size={18} weight="bold" className="mr-2" />
-                  手动添加
-                </Button>
+                {activeTab !== 'trends' && (
+                  <>
+                    <Button 
+                      onClick={() => setIsCSVImportOpen(true)} 
+                      variant="outline" 
+                      className="flex-1 md:flex-none"
+                    >
+                      <FileArrowDown size={18} weight="bold" className="mr-2" />
+                      导入 CSV
+                    </Button>
+                    <Button onClick={handleAddNew} className="flex-1 md:flex-none">
+                      <Plus size={18} weight="bold" className="mr-2" />
+                      手动添加
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
 
@@ -384,6 +392,10 @@ function App() {
                 onDeleteReport={deleteReport}
                 isLoading={isReportsLoading}
               />
+            </TabsContent>
+
+            <TabsContent value="trends">
+              <MultiVersionTrendCharts benchmarks={benchmarks || []} />
             </TabsContent>
           </Tabs>
         </div>
