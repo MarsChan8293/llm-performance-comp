@@ -357,11 +357,12 @@ export function CSVImportForm({ onSave, onCancel }: CSVImportFormProps) {
         </div>
         <div className="space-y-2">
           <Label htmlFor="frameworkParams">框架启动参数</Label>
-          <Input
+          <Textarea
             id="frameworkParams"
             value={config.frameworkParams}
             onChange={(e) => setConfig({ ...config, frameworkParams: e.target.value })}
             placeholder="例如：--max-batch-size=256 --gpu-memory-utilization=0.9"
+            className="min-h-[100px] font-mono text-sm resize-y"
           />
         </div>
         <div className="space-y-2">
