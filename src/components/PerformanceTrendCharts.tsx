@@ -141,13 +141,13 @@ export function PerformanceTrendCharts({
   const renderPercentageChart = (dataKey: string, title: string) => (
     <Card key={`percentage-${dataKey}`} className="p-6">
       <h4 className="font-semibold mb-4 text-center">{title}</h4>
-      <ChartContainer config={chartConfig} className="h-[300px] w-full">
-        <LineChart data={filteredData}>
+      <ChartContainer config={chartConfig} className="h-[350px] w-full">
+        <LineChart data={filteredData} margin={{ top: 20, right: 30, left: 20, bottom: 30 }}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis 
             dataKey="concurrency" 
             type="category"
-            label={{ value: '并发数', position: 'insideBottom', offset: -5 }}
+            label={{ value: '并发数', position: 'insideBottom', offset: -10 }}
           />
           <YAxis 
             label={{ value: '百分比 (%)', angle: -90, position: 'insideLeft' }}
@@ -170,13 +170,13 @@ export function PerformanceTrendCharts({
   const renderRatioChart = (dataKey: string, title: string) => (
     <Card key={`ratio-${dataKey}`} className="p-6">
       <h4 className="font-semibold mb-4 text-center">{title}</h4>
-      <ChartContainer config={chartConfig} className="h-[300px] w-full">
-        <LineChart data={filteredData}>
+      <ChartContainer config={chartConfig} className="h-[350px] w-full">
+        <LineChart data={filteredData} margin={{ top: 20, right: 30, left: 20, bottom: 30 }}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis 
             dataKey="concurrency"
             type="category"
-            label={{ value: '并发数', position: 'insideBottom', offset: -5 }}
+            label={{ value: '并发数', position: 'insideBottom', offset: -10 }}
           />
           <YAxis 
             label={{ value: '基准测试A / 基准测试B', angle: -90, position: 'insideLeft' }}
@@ -199,19 +199,19 @@ export function PerformanceTrendCharts({
   const renderBarChart = (dataKey1: string, dataKey2: string, title: string, yAxisLabel: string) => (
     <Card key={`bar-${dataKey1}`} className="p-6">
       <h4 className="font-semibold mb-4 text-center">{title}</h4>
-      <ChartContainer config={chartConfig} className="h-[300px] w-full">
-        <BarChart data={filteredData} barSize={40}>
+      <ChartContainer config={chartConfig} className="h-[350px] w-full">
+        <BarChart data={filteredData} barSize={40} margin={{ top: 20, right: 30, left: 20, bottom: 50 }}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis 
             dataKey="concurrency"
             type="category"
-            label={{ value: '并发数', position: 'insideBottom', offset: -10 }}
+            label={{ value: '并发数', position: 'insideBottom', offset: -15 }}
           />
           <YAxis 
             label={{ value: yAxisLabel, angle: -90, position: 'insideLeft' }}
           />
           <ChartTooltip content={<ChartTooltipContent />} />
-          <Legend />
+          <Legend wrapperStyle={{ paddingTop: '20px' }} />
           <Bar 
             dataKey={dataKey1} 
             fill={chartConfig.benchmark1.color}
