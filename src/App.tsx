@@ -13,6 +13,7 @@ import { BenchmarkCard } from '@/components/BenchmarkCard'
 import { ComparisonPanel } from '@/components/ComparisonPanel'
 import { ComparisonReportList } from '@/components/ComparisonReportList'
 import { AdvancedSearchPanel, AdvancedSearchFilters } from '@/components/AdvancedSearchPanel'
+import { MultiVersionTrendCharts } from '@/components/MultiVersionTrendCharts'
 
 import { Benchmark, BenchmarkConfig, BenchmarkMetricsEntry, ComparisonReport } from '@/lib/types'
 import { Plus, MagnifyingGlass, ArrowsLeftRight, ChartBar, FileArrowDown, FileText } from '@phosphor-icons/react'
@@ -272,6 +273,9 @@ function App() {
                     </Badge>
                   )}
                 </TabsTrigger>
+                <TabsTrigger value="trends">
+                  性能趋势图
+                </TabsTrigger>
               </TabsList>
 
               <div className="flex gap-2 w-full md:w-auto">
@@ -384,6 +388,10 @@ function App() {
                 onDeleteReport={deleteReport}
                 isLoading={isReportsLoading}
               />
+            </TabsContent>
+
+            <TabsContent value="trends">
+              <MultiVersionTrendCharts benchmarks={benchmarks || []} />
             </TabsContent>
           </Tabs>
         </div>
