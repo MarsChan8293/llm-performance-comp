@@ -16,11 +16,12 @@ import {
   AlertDialogTitle 
 } from '@/components/ui/alert-dialog'
 import { Benchmark, PerformanceMetrics, ComparisonReport } from '@/lib/types'
-import { CaretUp, CaretDown, FloppyDisk, FileText, Plus, Copy, ArrowsLeftRight } from '@phosphor-icons/react'
+import { CaretUp, CaretDown, FloppyDisk, FileText, Plus, Copy, ArrowsLeftRight, ChartLine } from '@phosphor-icons/react'
 import { cn, parseGpuCount, generateUniqueId } from '@/lib/utils'
 import { useDbReports } from '@/hooks/use-db-reports'
 import { toast } from 'sonner'
 import { v4 as uuidv4 } from 'uuid'
+import { PerformanceTrendCharts } from './PerformanceTrendCharts'
 
 interface ComparisonPanelProps {
   benchmark1: Benchmark
@@ -33,6 +34,7 @@ export function ComparisonPanel({ benchmark1, benchmark2 }: ComparisonPanelProps
   const [isOverwriteDialogOpen, setIsOverwriteDialogOpen] = useState(false)
   const [existingReport, setExistingReport] = useState<ComparisonReport | null>(null)
   const [isSwapped, setIsSwapped] = useState(false)
+  const [showTrendCharts, setShowTrendCharts] = useState(false)
 
   const gpuCount1 = useMemo(() => parseGpuCount(benchmark1.config.shardingConfig), [benchmark1.config.shardingConfig])
   const gpuCount2 = useMemo(() => parseGpuCount(benchmark2.config.shardingConfig), [benchmark2.config.shardingConfig])
@@ -385,6 +387,14 @@ export function ComparisonPanel({ benchmark1, benchmark2 }: ComparisonPanelProps
                   ))}
                 </SelectContent>
               </Select>
+              <Button
+                onClick={() => setShowTrendCharts(!showTrendCharts)}
+                variant={showTrendCharts ? "default" : "outline"}
+                className="gap-2"
+              >
+                <ChartLine size={18} weight="bold" />
+                性能趋势图
+              </Button>
             </div>
           </div>
           <div className="overflow-x-auto">
@@ -454,6 +464,20 @@ export function ComparisonPanel({ benchmark1, benchmark2 }: ComparisonPanelProps
               </TableBody>
             </Table>
           </div>
+          
+          {showTrendCharts && (
+            <div className="mt-6 pt-6 border-t border-amber-200">
+              <PerformanceTrendCharts
+                metrics1={metrics1}
+                metrics2={metrics2}
+                selectedCombo={selectedCombo}
+                modelName1={displayBenchmark1.config.modelName}
+                modelName2={displayBenchmark2.config.modelName}
+                gpuCount1={displayGpuCount1}
+                gpuCount2={displayGpuCount2}
+              />
+            </div>
+          )}
         </Card>
       )}
 
