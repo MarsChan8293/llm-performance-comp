@@ -119,40 +119,23 @@ export function PerformanceTrendCharts({
     )
   }
 
-  // Custom dot renderer for percentage charts with color based on value
+  // Custom dot renderer for percentage charts with color based on value and metric type
   const renderPercentageDot = (props: any) => {
     const { cx, cy, payload, dataKey } = props
     const value = payload[dataKey]
     
     if (value === undefined || value === null) return null
     
-    // Green for positive (improvement), red for negative (decline)
-    const fill = value >= 0 ? '#22c55e' : '#ef4444'
+    // Determine if this is an inverse metric (lower is better: TTFT, TPOT)
+    const isInverseMetric = dataKey === 'ttftPercentage' || dataKey === 'tpotPercentage'
+    
+    // For inverse metrics (TTFT, TPOT): negative = improvement (green), positive = decline (red)
+    // For normal metrics (TPS): positive = improvement (green), negative = decline (red)
+    const isImprovement = isInverseMetric ? value < 0 : value > 0
+    const fill = isImprovement ? '#22c55e' : '#ef4444'
     
     return (
       <circle cx={cx} cy={cy} r={4} fill={fill} stroke="white" strokeWidth={1} />
-    )
-  }
-
-  // Custom label formatter for line charts with color based on value
-  const renderPercentageLineLabel = (props: any) => {
-    const { x, y, value } = props
-    if (value === undefined || value === null) return null
-    
-    // Green for positive (improvement), red for negative (decline)
-    const color = value >= 0 ? '#22c55e' : '#ef4444'
-    
-    return (
-      <text 
-        x={x} 
-        y={y - 10} 
-        fill={color} 
-        textAnchor="middle" 
-        fontSize={10}
-        fontWeight="bold"
-      >
-        {typeof value === 'number' ? value.toFixed(1) : value}
-      </text>
     )
   }
 
@@ -176,6 +159,33 @@ export function PerformanceTrendCharts({
   }
 
   const renderPercentageChart = (dataKey: string, title: string) => {
+    // Create a label renderer specific to this dataKey
+    const labelRenderer = (props: any) => {
+      const { x, y, value } = props
+      if (value === undefined || value === null) return null
+      
+      // Determine if this is an inverse metric (lower is better: TTFT, TPOT)
+      const isInverseMetric = dataKey === 'ttftPercentage' || dataKey === 'tpotPercentage'
+      
+      // For inverse metrics (TTFT, TPOT): negative = improvement (green), positive = decline (red)
+      // For normal metrics (TPS): positive = improvement (green), negative = decline (red)
+      const isImprovement = isInverseMetric ? value < 0 : value > 0
+      const color = isImprovement ? '#22c55e' : '#ef4444'
+      
+      return (
+        <text 
+          x={x} 
+          y={y - 10} 
+          fill={color} 
+          textAnchor="middle" 
+          fontSize={10}
+          fontWeight="bold"
+        >
+          {typeof value === 'number' ? value.toFixed(1) : value}
+        </text>
+      )
+    }
+
     return (
       <Card key={`percentage-${dataKey}`} className="p-6">
         <h4 className="font-semibold mb-4 text-center">{title}</h4>
@@ -198,7 +208,7 @@ export function PerformanceTrendCharts({
               strokeWidth={2}
               dot={(props) => renderPercentageDot({ ...props, dataKey })}
             >
-              <LabelList content={renderPercentageLineLabel} />
+              <LabelList content={labelRenderer} />
             </Line>
           </LineChart>
         </ChartContainer>
