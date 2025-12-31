@@ -285,18 +285,22 @@ function App() {
                     性能对比
                   </Button>
                 )}
-                <Button 
-                  onClick={() => setIsCSVImportOpen(true)} 
-                  variant="outline" 
-                  className="flex-1 md:flex-none"
-                >
-                  <FileArrowDown size={18} weight="bold" className="mr-2" />
-                  导入 CSV
-                </Button>
-                <Button onClick={handleAddNew} className="flex-1 md:flex-none">
-                  <Plus size={18} weight="bold" className="mr-2" />
-                  手动添加
-                </Button>
+                {activeTab !== 'trends' && (
+                  <>
+                    <Button 
+                      onClick={() => setIsCSVImportOpen(true)} 
+                      variant="outline" 
+                      className="flex-1 md:flex-none"
+                    >
+                      <FileArrowDown size={18} weight="bold" className="mr-2" />
+                      导入 CSV
+                    </Button>
+                    <Button onClick={handleAddNew} className="flex-1 md:flex-none">
+                      <Plus size={18} weight="bold" className="mr-2" />
+                      手动添加
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
 

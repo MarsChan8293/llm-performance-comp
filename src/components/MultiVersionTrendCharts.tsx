@@ -362,6 +362,14 @@ export function MultiVersionTrendCharts({ benchmarks }: MultiVersionTrendChartsP
                 <p className="text-xs text-muted-foreground truncate">
                   {benchmark.config.serverName} · {benchmark.config.chipName}
                 </p>
+                <p className="text-xs text-muted-foreground truncate">
+                  {benchmark.config.framework} · {benchmark.config.frameworkVersion}
+                </p>
+                {benchmark.config.notes && (
+                  <p className="text-xs text-muted-foreground truncate" title={benchmark.config.notes}>
+                    备注: {benchmark.config.notes}
+                  </p>
+                )}
                 {benchmark.uniqueId && (
                   <code className="text-xs bg-muted px-1 py-0.5 rounded font-mono">
                     {benchmark.uniqueId}
