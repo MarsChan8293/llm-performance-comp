@@ -50,11 +50,11 @@ export function PerformanceTrendCharts({
       const tpsPercentage = m1 && m2 ? ((m2.tokensPerSecond - m1.tokensPerSecond) / m1.tokensPerSecond) * 100 : undefined
       const tpsPerGpuPercentage = tpsPerGpu1 && tpsPerGpu2 ? ((tpsPerGpu2 - tpsPerGpu1) / tpsPerGpu1) * 100 : undefined
 
-      // Calculate ratios (A / B)
-      const ttftRatio = m1 && m2 ? m1.ttft / m2.ttft : undefined
-      const tpotRatio = m1 && m2 ? m1.tpot / m2.tpot : undefined
-      const tpsRatio = m1 && m2 ? m1.tokensPerSecond / m2.tokensPerSecond : undefined
-      const tpsPerGpuRatio = tpsPerGpu1 && tpsPerGpu2 ? tpsPerGpu1 / tpsPerGpu2 : undefined
+      // Calculate ratios (B / A)
+      const ttftRatio = m1 && m2 ? m2.ttft / m1.ttft : undefined
+      const tpotRatio = m1 && m2 ? m2.tpot / m1.tpot : undefined
+      const tpsRatio = m1 && m2 ? m2.tokensPerSecond / m1.tokensPerSecond : undefined
+      const tpsPerGpuRatio = tpsPerGpu1 && tpsPerGpu2 ? tpsPerGpu2 / tpsPerGpu1 : undefined
 
       return {
         concurrency: c,
@@ -119,6 +119,43 @@ export function PerformanceTrendCharts({
     )
   }
 
+  // Custom dot renderer for percentage charts with color based on value
+  const renderPercentageDot = (props: any) => {
+    const { cx, cy, payload, dataKey } = props
+    const value = payload[dataKey]
+    
+    if (value === undefined || value === null) return null
+    
+    // Green for positive (improvement), red for negative (decline)
+    const fill = value >= 0 ? '#22c55e' : '#ef4444'
+    
+    return (
+      <circle cx={cx} cy={cy} r={4} fill={fill} stroke="white" strokeWidth={1} />
+    )
+  }
+
+  // Custom label formatter for line charts with color based on value
+  const renderPercentageLineLabel = (props: any) => {
+    const { x, y, value } = props
+    if (value === undefined || value === null) return null
+    
+    // Green for positive (improvement), red for negative (decline)
+    const color = value >= 0 ? '#22c55e' : '#ef4444'
+    
+    return (
+      <text 
+        x={x} 
+        y={y - 10} 
+        fill={color} 
+        textAnchor="middle" 
+        fontSize={10}
+        fontWeight="bold"
+      >
+        {typeof value === 'number' ? value.toFixed(1) : value}
+      </text>
+    )
+  }
+
   // Custom label formatter for line charts
   const renderLineLabel = (props: any) => {
     const { x, y, value } = props
@@ -138,34 +175,50 @@ export function PerformanceTrendCharts({
     )
   }
 
-  const renderPercentageChart = (dataKey: string, title: string) => (
-    <Card key={`percentage-${dataKey}`} className="p-6">
-      <h4 className="font-semibold mb-4 text-center">{title}</h4>
-      <ChartContainer config={chartConfig} className="h-[350px] w-full">
-        <LineChart data={filteredData} margin={{ top: 20, right: 30, left: 20, bottom: 30 }}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis 
-            dataKey="concurrency" 
-            type="category"
-            label={{ value: '并发数', position: 'insideBottom', offset: -10 }}
-          />
-          <YAxis 
-            label={{ value: '百分比 (%)', angle: -90, position: 'insideLeft' }}
-          />
-          <ChartTooltip content={<ChartTooltipContent />} />
-          <Line 
-            type="monotone" 
-            dataKey={dataKey} 
-            stroke={chartConfig.percentage.color}
-            strokeWidth={2}
-            dot={{ r: 4 }}
-          >
-            <LabelList content={renderLineLabel} />
-          </Line>
-        </LineChart>
-      </ChartContainer>
-    </Card>
-  )
+  const renderPercentageChart = (dataKey: string, title: string) => {
+    // Create segments with colors based on value
+    const segments = filteredData.map((data, index) => {
+      if (index === 0) return null
+      const prevValue = filteredData[index - 1][dataKey]
+      const currValue = data[dataKey]
+      
+      // Determine color: green for positive, red for negative
+      // Use average of segment endpoints
+      const avgValue = ((prevValue || 0) + (currValue || 0)) / 2
+      const color = avgValue >= 0 ? '#22c55e' : '#ef4444'
+      
+      return { color, index }
+    }).filter(Boolean)
+
+    return (
+      <Card key={`percentage-${dataKey}`} className="p-6">
+        <h4 className="font-semibold mb-4 text-center">{title}</h4>
+        <ChartContainer config={chartConfig} className="h-[350px] w-full">
+          <LineChart data={filteredData} margin={{ top: 20, right: 30, left: 20, bottom: 30 }}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis 
+              dataKey="concurrency" 
+              type="category"
+              label={{ value: '并发数', position: 'insideBottom', offset: -10 }}
+            />
+            <YAxis 
+              label={{ value: '百分比 (%)', angle: -90, position: 'insideLeft' }}
+            />
+            <ChartTooltip content={<ChartTooltipContent />} />
+            <Line 
+              type="monotone" 
+              dataKey={dataKey} 
+              stroke="#666"
+              strokeWidth={2}
+              dot={(props) => renderPercentageDot({ ...props, dataKey })}
+            >
+              <LabelList content={renderPercentageLineLabel} />
+            </Line>
+          </LineChart>
+        </ChartContainer>
+      </Card>
+    )
+  }
 
   const renderRatioChart = (dataKey: string, title: string) => (
     <Card key={`ratio-${dataKey}`} className="p-6">
@@ -179,7 +232,7 @@ export function PerformanceTrendCharts({
             label={{ value: '并发数', position: 'insideBottom', offset: -10 }}
           />
           <YAxis 
-            label={{ value: '基准测试A / 基准测试B', angle: -90, position: 'insideLeft' }}
+            label={{ value: '基准测试B / 基准测试A', angle: -90, position: 'insideLeft' }}
           />
           <ChartTooltip content={<ChartTooltipContent />} />
           <Line 
