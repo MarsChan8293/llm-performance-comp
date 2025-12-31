@@ -243,7 +243,7 @@ export function MultiVersionTrendCharts({ benchmarks }: MultiVersionTrendChartsP
               formatter={(value, entry: any) => {
                 const benchmarkId = value
                 const benchmark = selectedBenchmarks.find(b => b.id === benchmarkId)
-                return benchmark?.config.modelName || value
+                return benchmark?.config.frameworkVersion || value
               }}
             />
             {selectedBenchmarks.map((benchmark, index) => (
@@ -313,7 +313,7 @@ export function MultiVersionTrendCharts({ benchmarks }: MultiVersionTrendChartsP
               formatter={(value, entry: any) => {
                 const benchmarkId = value
                 const benchmark = selectedBenchmarks.find(b => b.id === benchmarkId)
-                return benchmark?.config.modelName || value
+                return benchmark?.config.frameworkVersion || value
               }}
             />
             {selectedBenchmarks.map((benchmark, index) => (
@@ -438,7 +438,7 @@ export function MultiVersionTrendCharts({ benchmarks }: MultiVersionTrendChartsP
             <>
               {/* TTFT Charts */}
               <div className="space-y-4">
-                <h3 className="text-xl font-bold text-center">TTFT 性能对比</h3>
+                <h3 className="text-xl font-bold text-center">{selectedBenchmarks[0]?.config.modelName} TTFT性能对比</h3>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {renderBarChart('ttft', 'TTFT 性能柱状图', 'TTFT (ms)')}
                   {renderTrendChart('ttft', 'TTFT 性能趋势图', 'TTFT (ms)')}
@@ -447,7 +447,7 @@ export function MultiVersionTrendCharts({ benchmarks }: MultiVersionTrendChartsP
 
               {/* TPOT Charts */}
               <div className="space-y-4">
-                <h3 className="text-xl font-bold text-center">TPOT 性能对比</h3>
+                <h3 className="text-xl font-bold text-center">{selectedBenchmarks[0]?.config.modelName} TPOT性能对比</h3>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {renderBarChart('tpot', 'TPOT 性能柱状图', 'TPOT (ms)')}
                   {renderTrendChart('tpot', 'TPOT 性能趋势图', 'TPOT (ms)')}
@@ -456,7 +456,7 @@ export function MultiVersionTrendCharts({ benchmarks }: MultiVersionTrendChartsP
 
               {/* TPS Charts */}
               <div className="space-y-4">
-                <h3 className="text-xl font-bold text-center">TPS 性能对比</h3>
+                <h3 className="text-xl font-bold text-center">{selectedBenchmarks[0]?.config.modelName} TPS性能对比</h3>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {renderBarChart('tps', 'TPS 性能柱状图', 'TPS (tokens/s)')}
                   {renderTrendChart('tps', 'TPS 性能趋势图', 'TPS (tokens/s)')}
@@ -465,7 +465,7 @@ export function MultiVersionTrendCharts({ benchmarks }: MultiVersionTrendChartsP
 
               {/* TPS per GPU Charts */}
               <div className="space-y-4">
-                <h3 className="text-xl font-bold text-center">每卡 TPS 性能对比</h3>
+                <h3 className="text-xl font-bold text-center">{selectedBenchmarks[0]?.config.modelName} 每卡TPS性能对比</h3>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {renderBarChart('tpsPerGpu', '每卡 TPS 性能柱状图', '每卡 TPS')}
                   {renderTrendChart('tpsPerGpu', '每卡 TPS 性能趋势图', '每卡 TPS')}
