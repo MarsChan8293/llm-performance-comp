@@ -176,20 +176,6 @@ export function PerformanceTrendCharts({
   }
 
   const renderPercentageChart = (dataKey: string, title: string) => {
-    // Create segments with colors based on value
-    const segments = filteredData.map((data, index) => {
-      if (index === 0) return null
-      const prevValue = filteredData[index - 1][dataKey]
-      const currValue = data[dataKey]
-      
-      // Determine color: green for positive, red for negative
-      // Use average of segment endpoints
-      const avgValue = ((prevValue || 0) + (currValue || 0)) / 2
-      const color = avgValue >= 0 ? '#22c55e' : '#ef4444'
-      
-      return { color, index }
-    }).filter(Boolean)
-
     return (
       <Card key={`percentage-${dataKey}`} className="p-6">
         <h4 className="font-semibold mb-4 text-center">{title}</h4>
