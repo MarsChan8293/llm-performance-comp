@@ -5,11 +5,12 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend, ResponsiveContainer, LabelList } from 'recharts'
 import { Benchmark, PerformanceMetrics } from '@/lib/types'
 import { parseGpuCount } from '@/lib/utils'
-import { ChartLine } from '@phosphor-icons/react'
+import { ChartLine, MagnifyingGlass } from '@phosphor-icons/react'
 
 interface MultiVersionTrendChartsProps {
   benchmarks: Benchmark[]
@@ -33,6 +34,7 @@ export function MultiVersionTrendCharts({ benchmarks }: MultiVersionTrendChartsP
   const [selectedVersionIds, setSelectedVersionIds] = useState<Set<string>>(new Set())
   const [selectedContextLength, setSelectedContextLength] = useState<string>('')
   const [showCharts, setShowCharts] = useState(false)
+  const [searchQuery, setSearchQuery] = useState<string>('')
 
   // Get all unique I/O context length combinations
   const contextLengths = useMemo(() => {
@@ -78,6 +80,30 @@ export function MultiVersionTrendCharts({ benchmarks }: MultiVersionTrendChartsP
   const selectedBenchmarks = useMemo(() => {
     return benchmarks.filter(b => selectedVersionIds.has(b.id))
   }, [benchmarks, selectedVersionIds])
+
+  // Filter benchmarks based on search query
+  const filteredBenchmarks = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return benchmarks
+    }
+    
+    const query = searchQuery.toLowerCase().trim()
+    return benchmarks.filter(benchmark => {
+      const searchFields = [
+        benchmark.uniqueId,
+        benchmark.config.modelName,
+        benchmark.config.serverName,
+        benchmark.config.chipName,
+        benchmark.config.framework,
+        benchmark.config.frameworkVersion,
+        benchmark.config.notes,
+      ]
+      
+      return searchFields.some(field => 
+        field?.toLowerCase().includes(query)
+      )
+    })
+  }, [benchmarks, searchQuery])
 
   // Aggregate metrics for each selected benchmark
   const aggregateMetrics = (metrics: PerformanceMetrics[]) => {
@@ -343,8 +369,25 @@ export function MultiVersionTrendCharts({ benchmarks }: MultiVersionTrendChartsP
       <Card className="p-6">
         <h3 className="text-lg font-semibold mb-4">选择性能版本进行对比 (2-10个)</h3>
         
+        {/* Search input */}
+        <div className="mb-4">
+          <div className="relative">
+            <MagnifyingGlass 
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" 
+              size={18} 
+            />
+            <Input
+              type="text"
+              placeholder="搜索：编号、模型、服务器、芯片、框架、版本号..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
-          {benchmarks.map(benchmark => (
+          {filteredBenchmarks.map(benchmark => (
             <div key={benchmark.id} className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-muted/30 transition-colors">
               <Checkbox
                 id={`version-${benchmark.id}`}
