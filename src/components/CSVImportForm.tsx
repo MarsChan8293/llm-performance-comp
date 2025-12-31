@@ -224,7 +224,7 @@ export function CSVImportForm({ onSave, onCancel }: CSVImportFormProps) {
                 placeholder={CSV_PLACEHOLDER_EXAMPLE}
                 value={csvText}
                 onChange={handleTextChange}
-                className="min-h-[200px] font-mono text-sm"
+                className="min-h-[200px] font-mono text-sm break-all"
               />
               {csvText && (
                 <div className="flex items-center gap-3 text-sm bg-muted/60 px-3 py-2 rounded-md">
@@ -362,7 +362,7 @@ export function CSVImportForm({ onSave, onCancel }: CSVImportFormProps) {
             value={config.frameworkParams}
             onChange={(e) => setConfig({ ...config, frameworkParams: e.target.value })}
             placeholder="例如：--max-batch-size=256 --gpu-memory-utilization=0.9"
-            className="min-h-[100px] font-mono text-sm resize-y"
+            className="min-h-[100px] font-mono text-sm resize-y break-all"
           />
         </div>
         <div className="space-y-2">

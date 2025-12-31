@@ -179,7 +179,7 @@ export function BenchmarkForm({ benchmark, onSave, onCancel }: BenchmarkFormProp
             value={config.frameworkParams}
             onChange={(e) => setConfig({ ...config, frameworkParams: e.target.value })}
             placeholder="例如：--max-batch-size=256 --gpu-memory-utilization=0.9"
-            className="min-h-[100px] font-mono text-sm resize-y"
+            className="min-h-[100px] font-mono text-sm resize-y break-all"
           />
         </div>
         <div className="space-y-2">
