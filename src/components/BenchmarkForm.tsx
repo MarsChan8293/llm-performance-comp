@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
+import { Textarea } from '@/components/ui/textarea'
 import { Benchmark, BenchmarkConfig, BenchmarkMetricsEntry } from '@/lib/types'
 
 interface BenchmarkFormProps {
@@ -173,11 +174,12 @@ export function BenchmarkForm({ benchmark, onSave, onCancel }: BenchmarkFormProp
         </div>
         <div className="space-y-2">
           <Label htmlFor="frameworkParams">框架启动参数</Label>
-          <Input
+          <Textarea
             id="frameworkParams"
             value={config.frameworkParams}
             onChange={(e) => setConfig({ ...config, frameworkParams: e.target.value })}
             placeholder="例如：--max-batch-size=256 --gpu-memory-utilization=0.9"
+            className="min-h-[100px] font-mono text-sm resize-y break-words"
           />
         </div>
         <div className="space-y-2">
@@ -218,7 +220,6 @@ export function BenchmarkForm({ benchmark, onSave, onCancel }: BenchmarkFormProp
                   <Input
                     id={`concurrency-${idx}`}
                     type="number"
-                    min="1"
                     required
                     value={metric.concurrency}
                     onChange={(e) => updateMetric(idx, 'concurrency', Number(e.target.value))}
@@ -229,7 +230,6 @@ export function BenchmarkForm({ benchmark, onSave, onCancel }: BenchmarkFormProp
                   <Input
                     id={`inputLength-${idx}`}
                     type="number"
-                    min="0"
                     required
                     value={metric.inputLength}
                     onChange={(e) => updateMetric(idx, 'inputLength', Number(e.target.value))}
@@ -240,7 +240,6 @@ export function BenchmarkForm({ benchmark, onSave, onCancel }: BenchmarkFormProp
                   <Input
                     id={`outputLength-${idx}`}
                     type="number"
-                    min="0"
                     required
                     value={metric.outputLength}
                     onChange={(e) => updateMetric(idx, 'outputLength', Number(e.target.value))}
@@ -251,8 +250,6 @@ export function BenchmarkForm({ benchmark, onSave, onCancel }: BenchmarkFormProp
                   <Input
                     id={`ttft-${idx}`}
                     type="number"
-                    min="0"
-                    step="0.01"
                     required
                     value={metric.ttft}
                     onChange={(e) => updateMetric(idx, 'ttft', Number(e.target.value))}
@@ -263,8 +260,6 @@ export function BenchmarkForm({ benchmark, onSave, onCancel }: BenchmarkFormProp
                   <Input
                     id={`tpot-${idx}`}
                     type="number"
-                    min="0"
-                    step="0.01"
                     required
                     value={metric.tpot}
                     onChange={(e) => updateMetric(idx, 'tpot', Number(e.target.value))}
@@ -275,8 +270,6 @@ export function BenchmarkForm({ benchmark, onSave, onCancel }: BenchmarkFormProp
                   <Input
                     id={`tokensPerSecond-${idx}`}
                     type="number"
-                    min="0"
-                    step="0.01"
                     required
                     value={metric.tokensPerSecond}
                     onChange={(e) => updateMetric(idx, 'tokensPerSecond', Number(e.target.value))}
