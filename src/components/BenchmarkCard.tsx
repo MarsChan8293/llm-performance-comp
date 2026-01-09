@@ -2,10 +2,13 @@ import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Benchmark } from '@/lib/types'
-import { PencilSimple, Trash, Copy } from '@phosphor-icons/react'
+import { PencilSimple, Trash, Copy, Eye } from '@phosphor-icons/react'
 import { parseGpuCount } from '@/lib/utils'
 import { toast } from 'sonner'
+import { useState } from 'react'
 
 interface BenchmarkCardProps {
   benchmark: Benchmark
@@ -22,6 +25,8 @@ export function BenchmarkCard({
   onEdit,
   onDelete,
 }: BenchmarkCardProps) {
+  const [isViewDataOpen, setIsViewDataOpen] = useState(false)
+
   const handleCopyUniqueId = async () => {
     if (benchmark.uniqueId) {
       try {
@@ -82,6 +87,15 @@ export function BenchmarkCard({
               </div>
             </div>
             <div className="flex gap-1 flex-shrink-0">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setIsViewDataOpen(true)}
+                className="h-8"
+              >
+                <Eye size={16} className="mr-1" />
+                查看数据
+              </Button>
               <Badge variant="secondary" className="mr-2">
                 {benchmark.metrics.length} 条数据
               </Badge>
@@ -155,6 +169,106 @@ export function BenchmarkCard({
           </div>
         </div>
       </div>
+
+      {/* Performance Data Dialog */}
+      <Dialog open={isViewDataOpen} onOpenChange={setIsViewDataOpen}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl">
+              {benchmark.config.modelName} - 性能数据详情
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {/* Configuration Summary */}
+            <div className="bg-muted/50 p-4 rounded-lg">
+              <h3 className="font-semibold mb-3">配置信息</h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+                <div>
+                  <span className="text-muted-foreground">提交人：</span>
+                  <span className="ml-1 font-medium">{benchmark.config.submitter}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">服务器：</span>
+                  <span className="ml-1 font-medium">{benchmark.config.serverName}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">芯片：</span>
+                  <span className="ml-1 font-medium">{benchmark.config.chipName}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">框架：</span>
+                  <span className="ml-1 font-medium">{benchmark.config.framework}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">版本：</span>
+                  <span className="ml-1 font-medium">{benchmark.config.frameworkVersion}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">测试日期：</span>
+                  <span className="ml-1 font-medium">{benchmark.config.testDate}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">切分参数：</span>
+                  <span className="ml-1 font-medium">
+                    {benchmark.config.shardingConfig}
+                    <span className="ml-1 text-xs text-muted-foreground">
+                      ({parseGpuCount(benchmark.config.shardingConfig)}卡)
+                    </span>
+                  </span>
+                </div>
+                {benchmark.config.operatorAcceleration && (
+                  <div>
+                    <span className="text-muted-foreground">算子加速：</span>
+                    <span className="ml-1 font-medium">{benchmark.config.operatorAcceleration}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Performance Metrics Table */}
+            <div>
+              <h3 className="font-semibold mb-3">性能指标数据（共 {benchmark.metrics.length} 条）</h3>
+              <div className="border rounded-lg overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-center">#</TableHead>
+                      <TableHead className="text-center">并发数</TableHead>
+                      <TableHead className="text-center">输入长度</TableHead>
+                      <TableHead className="text-center">输出长度</TableHead>
+                      <TableHead className="text-center">TTFT (ms)</TableHead>
+                      <TableHead className="text-center">TPOT (ms)</TableHead>
+                      <TableHead className="text-center">TPS (tokens/s)</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {benchmark.metrics.length > 0 ? (
+                      benchmark.metrics.map((metric, index) => (
+                        <TableRow key={index}>
+                          <TableCell className="text-center font-medium">{index + 1}</TableCell>
+                          <TableCell className="text-center font-mono">{metric.concurrency ?? 0}</TableCell>
+                          <TableCell className="text-center font-mono">{metric.inputLength ?? 0}</TableCell>
+                          <TableCell className="text-center font-mono">{metric.outputLength ?? 0}</TableCell>
+                          <TableCell className="text-center font-mono">{(metric.ttft ?? 0).toFixed(2)}</TableCell>
+                          <TableCell className="text-center font-mono">{(metric.tpot ?? 0).toFixed(2)}</TableCell>
+                          <TableCell className="text-center font-mono">{(metric.tokensPerSecond ?? 0).toFixed(2)}</TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                          暂无性能数据
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   )
 }
