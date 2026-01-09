@@ -247,12 +247,12 @@ export function BenchmarkCard({
                       benchmark.metrics.map((metric, index) => (
                         <TableRow key={index}>
                           <TableCell className="text-center font-medium">{index + 1}</TableCell>
-                          <TableCell className="text-center font-mono">{metric.concurrency}</TableCell>
-                          <TableCell className="text-center font-mono">{metric.inputLength}</TableCell>
-                          <TableCell className="text-center font-mono">{metric.outputLength}</TableCell>
-                          <TableCell className="text-center font-mono">{metric.ttft.toFixed(2)}</TableCell>
-                          <TableCell className="text-center font-mono">{metric.tpot.toFixed(2)}</TableCell>
-                          <TableCell className="text-center font-mono">{metric.tokensPerSecond.toFixed(2)}</TableCell>
+                          <TableCell className="text-center font-mono">{metric.concurrency ?? 0}</TableCell>
+                          <TableCell className="text-center font-mono">{metric.inputLength ?? 0}</TableCell>
+                          <TableCell className="text-center font-mono">{metric.outputLength ?? 0}</TableCell>
+                          <TableCell className="text-center font-mono">{(metric.ttft ?? 0).toFixed(2)}</TableCell>
+                          <TableCell className="text-center font-mono">{(metric.tpot ?? 0).toFixed(2)}</TableCell>
+                          <TableCell className="text-center font-mono">{(metric.tokensPerSecond ?? 0).toFixed(2)}</TableCell>
                         </TableRow>
                       ))
                     ) : (
