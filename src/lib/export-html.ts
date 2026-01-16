@@ -53,8 +53,8 @@ function formatDiff(val1: number | undefined, val2: number | undefined, inverse 
  * Generates a configuration comparison row
  */
 function generateConfigRow(label: string, value1: string, value2: string): string {
-  const normalizedValue1 = value1?.trim() || ''
-  const normalizedValue2 = value2?.trim() || ''
+  const normalizedValue1 = (value1 ?? '').trim()
+  const normalizedValue2 = (value2 ?? '').trim()
   const isDifferent = normalizedValue1 !== normalizedValue2
   const isMultiLine = label === '框架启动参数' || label === '备注'
   
@@ -81,8 +81,8 @@ function generateConfigRow(label: string, value1: string, value2: string): strin
 export function generateComparisonHTML(data: ComparisonData): string {
   const { benchmark1, benchmark2, summary, selectedCombo = '1024 / 1024' } = data
   
-  const gpuCount1 = parseGpuCount(benchmark1.config.shardingConfig)
-  const gpuCount2 = parseGpuCount(benchmark2.config.shardingConfig)
+  const gpuCount1 = Math.max(1, parseGpuCount(benchmark1.config.shardingConfig))
+  const gpuCount2 = Math.max(1, parseGpuCount(benchmark2.config.shardingConfig))
   
   const metrics1 = aggregateMetrics(benchmark1.metrics)
   const metrics2 = aggregateMetrics(benchmark2.metrics)
@@ -511,6 +511,14 @@ export function generateComparisonHTML(data: ComparisonData): string {
 }
 
 /**
+ * Sanitizes a string to be safe for use in filenames
+ */
+function sanitizeFilename(name: string): string {
+  // Replace invalid characters with underscore
+  return name.replace(/[/\\:*?"<>|]/g, '_')
+}
+
+/**
  * Downloads the comparison report as an HTML file
  */
 export function downloadComparisonHTML(data: ComparisonData): void {
@@ -520,7 +528,9 @@ export function downloadComparisonHTML(data: ComparisonData): void {
   
   const link = document.createElement('a')
   link.href = url
-  const filename = `LLM性能对比报告_${data.benchmark1.config.modelName}_vs_${data.benchmark2.config.modelName}_${new Date().getTime()}.html`
+  const sanitizedModel1 = sanitizeFilename(data.benchmark1.config.modelName)
+  const sanitizedModel2 = sanitizeFilename(data.benchmark2.config.modelName)
+  const filename = `LLM性能对比报告_${sanitizedModel1}_vs_${sanitizedModel2}_${new Date().getTime()}.html`
   link.download = filename
   
   document.body.appendChild(link)

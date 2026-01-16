@@ -127,7 +127,8 @@ export function ComparisonPanel({ benchmark1, benchmark2 }: ComparisonPanelProps
       toast.success('HTML 报告已导出')
     } catch (error) {
       console.error('Export failed:', error)
-      toast.error('导出失败，请重试')
+      const errorMessage = error instanceof Error ? error.message : '未知错误'
+      toast.error(`导出失败: ${errorMessage}`)
     }
   }
 
