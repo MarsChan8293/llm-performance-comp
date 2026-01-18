@@ -16,12 +16,13 @@ import {
   AlertDialogTitle 
 } from '@/components/ui/alert-dialog'
 import { Benchmark, PerformanceMetrics, ComparisonReport } from '@/lib/types'
-import { CaretUp, CaretDown, FloppyDisk, FileText, Plus, Copy, ArrowsLeftRight, ChartLine } from '@phosphor-icons/react'
+import { CaretUp, CaretDown, FloppyDisk, FileText, Plus, Copy, ArrowsLeftRight, ChartLine, Export } from '@phosphor-icons/react'
 import { cn, parseGpuCount, generateUniqueId } from '@/lib/utils'
 import { useDbReports } from '@/hooks/use-db-reports'
 import { toast } from 'sonner'
 import { v4 as uuidv4 } from 'uuid'
 import { PerformanceTrendCharts } from './PerformanceTrendCharts'
+import { downloadComparisonHTML } from '@/lib/export-html'
 
 interface ComparisonPanelProps {
   benchmark1: Benchmark
@@ -112,6 +113,22 @@ export function ComparisonPanel({ benchmark1, benchmark2 }: ComparisonPanelProps
     if (success) {
       toast.success(overwrite ? '报告已更新' : '报告已保存')
       setIsOverwriteDialogOpen(false)
+    }
+  }
+
+  const handleExportHTML = () => {
+    try {
+      downloadComparisonHTML({
+        benchmark1: displayBenchmark1,
+        benchmark2: displayBenchmark2,
+        summary: summary.trim(),
+        selectedCombo
+      })
+      toast.success('HTML 报告已导出')
+    } catch (error) {
+      console.error('Export failed:', error)
+      const errorMessage = error instanceof Error ? error.message : '未知错误'
+      toast.error(`导出失败: ${errorMessage}`)
     }
   }
 
@@ -618,24 +635,34 @@ export function ComparisonPanel({ benchmark1, benchmark2 }: ComparisonPanelProps
             onChange={(e) => setSummary(e.target.value)}
           />
           
-          <div className="flex justify-end gap-3">
-            {existingReport && (
-              <Button 
-                variant="outline" 
-                onClick={() => handleSaveReport(false)}
-                className="gap-2"
-              >
-                <Plus size={18} />
-                另存为新报告
-              </Button>
-            )}
+          <div className="flex justify-between items-center gap-3">
             <Button 
-              onClick={() => handleSaveReport(!!existingReport)}
+              onClick={handleExportHTML}
+              variant="outline"
               className="gap-2"
             >
-              <FloppyDisk size={18} />
-              {existingReport ? '更新现有报告' : '保存对比报告'}
+              <Export size={18} />
+              导出为 HTML
             </Button>
+            <div className="flex gap-3">
+              {existingReport && (
+                <Button 
+                  variant="outline" 
+                  onClick={() => handleSaveReport(false)}
+                  className="gap-2"
+                >
+                  <Plus size={18} />
+                  另存为新报告
+                </Button>
+              )}
+              <Button 
+                onClick={() => handleSaveReport(!!existingReport)}
+                className="gap-2"
+              >
+                <FloppyDisk size={18} />
+                {existingReport ? '更新现有报告' : '保存对比报告'}
+              </Button>
+            </div>
           </div>
         </div>
       </Card>
